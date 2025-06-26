@@ -211,7 +211,9 @@ MODULE tricubic
         SUBROUTINE calc_all_coeffs(f, dfdx, dfdy, dfdz, d2fdxdy, d2fdxdz, d2fdydz, d3fdxdydz, outdat)
             IMPLICIT NONE
             REAL(8), DIMENSION(Nx, Ny, Nz), INTENT(IN) :: f, dfdx, dfdy, dfdz, d2fdxdy, d2fdxdz, d2fdydz, d3fdxdydz
-            REAL(8), DIMENSION(Nx, Ny, Nz, 4, 4, 4), INTENT(OUT) :: outdat
+            REAL(8), DIMENSION(Nx - 1, Ny - 1, Nz - 1, 4, 4, 4), INTENT(OUT) :: outdat     
+            ! note that the coefficient matrix has a dimension one less than Nx/Ny/Nz 
+            ! b/c there's one set of coefficients for each "cube" not each grid point
  
             INTEGER :: i_x, i_y, i_z, i, j, k
             REAL(8), DIMENSION(Nx, Ny, Nz) :: dfdx_nd, dfdy_nd, dfdz_nd, d2fdxdy_nd, d2fdxdz_nd, d2fdydz_nd, d3fdxdydz_nd
@@ -231,9 +233,9 @@ MODULE tricubic
             d2fdydz_nd(:,:,:) = d2fdydz(:,:,:) * dy * dz
             d3fdxdydz_nd(:,:,:) = d3fdxdydz(:,:,:) * dx * dy * dz
 
-            DO i_x = 1, Nx
-                DO i_y = 1, Ny
-                    DO i_z = 1, Nz
+            DO i_x = 1, Nx - 1
+                DO i_y = 1, Ny - 1
+                    DO i_z = 1, Nz - 1
                         b_vec(1:8)   = (/ f(i_x, i_y, i_z),     f(i_x+1, i_y, i_z),     &
                                         f(i_x, i_y+1, i_z),     f(i_x+1, i_y+1, i_z),   &
                                         f(i_x, i_y, i_z+1),     f(i_x+1, i_y, i_z+1),   &
@@ -298,7 +300,7 @@ MODULE tricubic
             IMPLICIT NONE
             REAL(8), INTENT(IN) :: x, y, z
             INTEGER, INTENT(IN) :: xder, yder, zder
-            REAL(8), DIMENSION(Nx, Ny, Nz, 4, 4, 4), INTENT(IN) :: coeffs
+            REAL(8), DIMENSION(Nx-1, Ny-1, Nz-1, 4, 4, 4), INTENT(IN) :: coeffs
             REAL(8), INTENT(OUT) :: result
 
             REAL(8) :: x_nd, y_nd, z_nd

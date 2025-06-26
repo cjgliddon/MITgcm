@@ -11,7 +11,7 @@ MODULE sf_seawater
     ! These are the arrays which store the Gibbs data and its derivatives
     REAL(8), DIMENSION(NP, NT, NM) :: G, dG_dP, dG_dT, dG_dM, d2G_dPdT, d2G_dPdM, d2G_dTdM, d3G_dPdTdM, d2G_dT2
     REAL(8), DIMENSION(NT*NM) :: dummy                         ! a dummy array for reading in data
-    REAL(8), DIMENSION(NP, NT, NM, 4, 4, 4) :: spline_coeffs
+    REAL(8), DIMENSION(NP-1, NT-1, NM-1, 4, 4, 4) :: spline_coeffs
     LOGICAL :: TD_data_is_loaded = .false.
 
 
