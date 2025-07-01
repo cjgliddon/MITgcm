@@ -94,7 +94,8 @@ C     data.pkg namelists
      &          useMNC,
      &          useRunClock,
      &          useEMBED_FILES,
-     &          useMYPACKAGE
+     &          useMYPACKAGE,
+     &          useSFz_Thermo
 
       _BEGIN_MASTER(myThid)
 
@@ -160,6 +161,7 @@ c     useGAD          =.FALSE.
       useRunClock     =.FALSE.
       useEMBED_FILES  =.FALSE.
       useMYPACKAGE    =.FALSE.
+      useSFz_Thermo   =.FALSE.
 
 C-    Adjust default to account for pkgs without run-time On/Off switch
 #ifdef ALLOW_AUTODIFF
@@ -408,6 +410,9 @@ C----- pkgs with a standard "usePKG" On/Off switch in "data.pkg":
 #endif
 #ifdef ALLOW_MYPACKAGE
       CALL PACKAGES_PRINT_MSG( useMYPACKAGE,  'MYPACKAGE',   ' ' )
+#endif
+#ifdef ALLOW_SFZ_THERMO
+      CALL PACKAGES_PRINT_MSG( useSFz_Thermo, 'SFz_Thermo',  ' ' )
 #endif
 
 C----- pkgs without standard "usePKG" in "data.pkg":

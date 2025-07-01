@@ -416,5 +416,9 @@ C--   if useMYPACKAGE=T, set mypackage parameters; otherwise just return
       CALL MYPACKAGE_READPARMS( myThid )
 #endif
 
+#ifdef ALLOW_SFZ_THERMO
+      IF (useSFz_Thermo) CALL SFZ_THERMO_READPARMS( myThid )
+#endif
+
       RETURN
       END

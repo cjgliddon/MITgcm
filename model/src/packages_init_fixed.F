@@ -640,6 +640,15 @@ C--   needs to be called after the OASIS_INIT
       ENDIF
 #endif
 
+#ifdef ALLOW_SFZ_THERMO
+      IF (useSFz_Thermo) THEN
+# ifdef ALLOW_DEBUG
+        IF (debugMode) CALL DEBUG_CALL('SFZ_THERMO_INIT_FIXED',myThid)
+# endif
+        CALL SFZ_THERMO_INIT_FIXED(myThid)
+      ENDIF
+#endif
+
 #ifdef ALLOW_CTRL
       IF (useCTRL) THEN
 C--   Initialise the control variables. Moved to the end of this S/R

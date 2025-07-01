@@ -332,6 +332,30 @@ C     this line makes TAF create vectorizable code
         ENDDO
        ENDDO
 
+C     2025-07-01: SeaFreeze calculation of alpha using method
+C     find_alphasfz_scalar from sf_thermo package
+      ELSEIF ( equationOfState.EQ.'SFZ' ) THEN
+#ifdef ALLOW_SFZ_THERMO   
+      IF ( useSFz_Thermo ) THEN
+       CALL PRESSURE_FOR_EOS(
+     I      bi, bj, iMin, iMax, jMin, jMax,  kRef, dp0,
+     O      locPres,
+     I      myThid )
+
+       DO j=jMin,jMax
+        DO i=iMin,iMax
+         ct      = theta(i,j,k,bi,bj)
+         sa      = salt(i,j,k,bi,bj)
+         p       = locPres(i,j)*SItodBar
+
+         CALL find_alphasfz_scalar(p, ct, sa, sfz_coeffs, alpha)
+         alphaLoc(i,j) = alpha
+
+        ENDDO
+       ENDDO
+      ENDIF
+#endif /* ALLOW_SFZ_THERMO */
+
       ELSE
          WRITE(*,*) 'FIND_ALPHA: equationOfState = ',equationOfState
          STOP 'FIND_ALPHA: "equationOfState" has illegal value'

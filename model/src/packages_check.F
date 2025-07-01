@@ -501,6 +501,13 @@ C---  Continue with standard packages (with standard usePKG flag)
       IF (useMYPACKAGE) CALL PACKAGES_ERROR_MSG('MYPACKAGE',' ',myThid)
 #endif
 
+#ifdef ALLOW_SFZ_THERMO
+      IF (useSFz_Thermo) CALL SFZ_THERMO_CHECK( myThid )
+#else
+      IF (useSFz_Thermo) CALL PACKAGES_ERROR_MSG('SFz_Thermo',' ',myThid)
+#endif
+
+
 #ifdef ALLOW_GENERIC_ADVDIFF
 C-    Check generic AdvDiff setting and related overlap minimum size:
 C     for this reason, called after other ${pkg}_check S/R

@@ -1,0 +1,39 @@
+Notes on SeaFreeze modifications to MITgcm
+
+-------------- Part I: seawater equation of state ---------------
+
+The first task at accurately representing icy-moon ocean dynamics in MITgcm is to use an accurate
+equation of state for water. MITgcm allows for several different equation of state configurations,
+with the most sophisticated being the TEOS-10 equation of state which is the modern standard for
+terrestrial oceanography. However, TEOS-10 has systematic biases at the very high fluid pressures 
+characteristic of some icy moon oceans (e.g. Ganymede's). Recently, Dr. Baptiste Journaux (UW)'s
+research group has developed a new modeling framework for representing the thermodynamic and
+material properties of water and ice under the extreme conditions of icy ocean worlds; their Python
+package SeaFreeze uses sixth-order polynomial local basis functions (a type of B-spline) to
+accurately fit experimental data on saltwater (NaClaq) up to 1000 MPa. Like TEOS-10, SeaFreeze's 
+water equation of state is based on the Gibbs function, from which various important thermodynamic
+properties can straightforwardly be calculated by taking derivatives. 
+
+In implementing the SeaFreeze equation of state into the MITgcm, I have "coarsened" Journaux et
+al.'s sixth-order spline represenation of the Gibbs function to a tricubic spline with 21x21x21
+control points in thermodynamic state space. The independent variables are pressure P, temperature 
+T, and molality m (moles of salt per kg of water). For each grid box bounded by eight control
+points (there are 20x20x20 of these), we calculate a 4x4x4 array of fitting coefficients which 
+completely specify the interpolating function within the grid box. The coefficients are determined
+using the method of Lekien & Marsden (Int. J. Numer. Meth. Engng., 2005); in this scheme, the 
+interpolated Gibbs function and all combinations of its first partial derivatives with respect to 
+P, T, m are guaranteed to be continuous throughout the domain. 
+
+Calculating the potential temperature is slightly more complicated, since a closed-form expression
+for it cannot be derived in terms of the Gibbs function. The TEOS-10 package finds the potential
+temperature using a modified Newton-Raphson root-finding algorithm described by McDougall & 
+Wotherspoon (App. Math. Lett., 2014) designed for computational efficiency and rapid convergence.
+(This is the approach I have used in my own module.) By default, MITgcm computes the potential
+temperature by numerical integration along an isentrope T(P). Either method requires knowledge of
+the second partial derivative of the Gibbs function with respect to temperature, which can be 
+calculated analytically from the spline representation but which is not guaranteed to be continuous
+everywhere. For now, we do not seek to rectify this rather unsatisfying state of affairs; since our
+goal with these modifications to MITgcm is physical insight into icy ocean world dynamics rather
+than perfect accuracy, we are content with the minor errors our approach might induce.
+
+*UPDATE 2025/07/01*: 

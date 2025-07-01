@@ -66,6 +66,9 @@ C     end nonlinear equation of state
 C     TEOS10 coefficients
       _RL teos(48)
 
+C     SeaFreeze coefficients 
+      _RL sfz_coeffs(20,20,20,4,4,4)
+
 C     Parameters in the temperature conversion code for TEOS10
 C     The TEOS 10 conversion factor to go from reference salinity to
 C     practical salinity (nondim)

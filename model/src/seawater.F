@@ -15,6 +15,9 @@ C     TEOS10 routines (renamed and modified from MOM6 implementation)
 C--   o CONVERT_CT2PT: S/R to convert conservative to potential temperature
 C--   o CONVERT_PT2CT: S/R to convert potential to conservative temperature
 C--                    (used by CONVERT_CT2PT)
+C     SeaFreeze routines:
+C--   o SW_PTMP_SF: function to compute potential temperature using SF data
+C--   o SW_TEMP_SF: function to compute in-situ temp. using SF data
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
@@ -27,6 +30,70 @@ C     !DESCRIPTION: \bv
 C     *=============================================================*
 C     | S/R  SW_PTMP
 C     | o compute potential temperature as per UNESCO 1983 report.
+C     *=============================================================*
+C     \ev
+C     started:
+C              Armin Koehl akoehl@ucsd.edu
+C
+C     ==================================================================
+C     SUBROUTINE SW_PTMP
+C     ==================================================================
+C     S  :: salinity    [         (PSS-78) ]
+C     T  :: temperature [degree C (IPTS-68)]
+C     P  :: pressure    [dbar]
+C     PR :: Reference pressure  [dbar]
+C     \ev
+
+C     !USES:
+      IMPLICIT NONE
+
+C     !INPUT/OUTPUT PARAMETERS:
+      _RL S,T,P,PR
+
+C     !FUNCTIONS:
+      _RL SW_ADTG
+      EXTERNAL SW_ADTG
+
+C     !LOCAL VARIABLES
+      _RL del_P ,del_th, th, q
+      _RL onehalf, two, three
+      PARAMETER ( onehalf = 0.5 _d 0, two = 2. _d 0, three = 3. _d 0 )
+CEOP
+
+C theta1
+      del_P  = PR - P
+      del_th = del_P*SW_ADTG(S,T,P)
+      th     = T + onehalf*del_th
+      q      = del_th
+C theta2
+      del_th = del_P*SW_ADTG(S,th,P+onehalf*del_P)
+
+      th     = th + (1 - 1/sqrt(two))*(del_th - q)
+      q      = (two-sqrt(two))*del_th + (-two+three/sqrt(two))*q
+
+C theta3
+      del_th = del_P*SW_ADTG(S,th,P+onehalf*del_P)
+      th     = th + (1 + 1/sqrt(two))*(del_th - q)
+      q      = (two + sqrt(two))*del_th + (-two-three/sqrt(two))*q
+
+C theta4
+      del_th = del_P*SW_ADTG(S,th,P+del_P)
+      SW_PTMP     = th + (del_th - two*q)/(two*three)
+
+      RETURN
+      END
+
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+
+CBOP
+C     !ROUTINE: SW_PTMP
+C     !INTERFACE:
+      _RL FUNCTION SW_PTMP_SF  (S,T,P,PR)
+
+C     !DESCRIPTION: \bv
+C     *=============================================================*
+C     | S/R  SW_PTMP_SF
+C     | o compute potential temperature using SF data
 C     *=============================================================*
 C     \ev
 C     started:

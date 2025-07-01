@@ -550,6 +550,12 @@ C--   Initialise the 2-Way Nesting packages variables
       ENDIF
 #endif /* ALLOW_MYPACKAGE */
 
+#ifdef ALLOW_SFZ_THERMO
+      IF ( useSFz_Thermo ) THEN
+        CALL SFZ_THERMO_INIT_VARIA( myThid )
+      ENDIF
+#endif /* ALLOW_SFZ_THERMO */
+
 #ifdef ALLOW_AUTODIFF_TAMC
 CADJ STORE theta  = tapelev_init, key = 1
 CADJ STORE salt   = tapelev_init, key = 1

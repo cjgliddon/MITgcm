@@ -1087,6 +1087,7 @@ C-- Logical flags for selecting packages
       LOGICAL useRunClock
       LOGICAL useEMBED_FILES
       LOGICAL useMYPACKAGE
+      LOGICAL useSFz_Thermo
       COMMON /PARM_PACKAGES/
      &        useGAD, useOBCS, useSHAP_FILT, useZONAL_FILT,
      &        useOPPS, usePP81, useKL10, useMY82, useGGL90, useKPP,
@@ -1100,6 +1101,7 @@ C-- Logical flags for selecting packages
      &        useATM2d, useAIM, useAtm_Phys, useFizhi, useGridAlt,
      &        useDiagnostics, useREGRID, useLayers, useMNC,
      &        useRunClock, useEMBED_FILES,
-     &        useMYPACKAGE
+     &        useMYPACKAGE,
+     &        useSFz_Thermo
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|

@@ -1,3 +1,4 @@
+#include "PACKAGES_CONFIG.h"
 #include "CPP_OPTIONS.h"
 #undef INCLUDE_EOS_CHECK
 
@@ -356,6 +357,15 @@ C     5. secant bulk modulus K of sea water at p
        TPD02 =  1.247811760368034 _d -6
 
       ELSEIF( equationOfState .EQ. 'IDEALG' ) THEN
+      
+C     2025-07-01: addition by Coleman Gliddon
+C     Coefficients from SeaFreeze equation of state are stored in
+C     sfz_coeffs.dat, a binary file
+
+      ELSEIF( equationOfState .EQ. 'SFZ') THEN
+         OPEN(38,FILE='data/sfz_G_coeffs.dat',FORM='UNFORMATTED')
+         READ(38,*) sfz_coeffs
+         CLOSE(38)
 
       ELSE
 

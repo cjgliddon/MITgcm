@@ -236,6 +236,31 @@ c#endif /* ALLOW_AUTODIFF_TAMC */
           ENDDO
          ENDDO
 
+C     Addition 2025-07-01:
+C     Use equation of state 'SFZ' (SeaFreeze)
+
+      ELSEIF( equationOfState .EQ. 'SFZ' ) THEN
+#ifdef ALLOW_SFZ_THERMO
+       IF ( useSFz_Thermo ) THEN 
+         CALL PRESSURE_FOR_EOS(
+     I             bi, bj, iMin, iMax, jMin, jMax, kRef, dp0,
+     O             locPres,
+     I             myThid )
+
+         CALL FIND_RHOSFZ(
+     I             iMin, iMax, jMin, jMax,
+     I             locPres, tFld, sFld,
+     O             rhoSFZ,
+     I             myThid )
+
+         DO j=jMin,jMax
+          DO i=iMin,iMax
+            rhoLoc(i,j) = rhoSFZ(i,j) - rhoConst
+          ENDDO
+         ENDDO  
+       ENDIF  
+#endif /* ALLOW_SFZ_THERMO */     
+
       ELSEIF( equationOfState .EQ. 'IDEALG' ) THEN
 
          CALL PRESSURE_FOR_EOS(
@@ -823,6 +848,72 @@ C     this line makes TAF create vectorizable code
 
        ENDDO
       ENDDO
+
+      RETURN
+      END
+
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+CBOP
+C     !ROUTINE: FIND_RHOSFZ
+C     !INTERFACE:
+      SUBROUTINE FIND_RHOSFZ(
+     I                iMin, iMax, jMin, jMax,
+     I                locPres, tFld, sFld,
+     O                rhoSF,
+     I                myThid )
+
+C     !DESCRIPTION: \bv
+C     *==========================================================*
+C     | o SUBROUTINE FIND_RHOSFZ
+C     |   Calculates the density using the SeaFreeze equation of
+C     |   state using the routines in pkg/sf_thermo/
+C     |   sf_seawater_mod.F90
+C     *==========================================================*
+C     \ev
+
+C     !USES:
+      IMPLICIT NONE
+C     == Global variables ==
+#include "SIZE.h"
+#include "EEPARAMS.h"
+#include "PARAMS.h"
+#include "EOS.h"
+
+C     !INPUT/OUTPUT PARAMETERS:
+C     == Routine arguments ==
+      INTEGER iMin,iMax,jMin,jMax
+      _RL locPres(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
+      _RL tFld   (1-OLx:sNx+OLx,1-OLy:sNy+OLy)
+      _RL sFld   (1-OLx:sNx+OLx,1-OLy:sNy+OLy)
+      _RL rhoSF (1-OLx:sNx+OLx,1-OLy:sNy+OLy)
+      INTEGER myThid
+
+C     !LOCAL VARIABLES:
+C     == Local variables ==
+      INTEGER i,j
+      _RL ct, sa, p, rho_loc
+      _RL den, epsln
+CEOP
+
+#ifdef ALLOW_SFZ_THERMO
+      IF ( useSFz_Thermo ) THEN
+      DO j=jMin,jMax
+       DO i=iMin,iMax
+C     abbreviations
+        ct      = tFld(i,j)
+        sa      = sFld(i,j)
+
+        IF ( sa .LT. 0. _d 0 ) THEN
+         sa     = 0. _d 0
+        p       = locPres(i,j)
+      
+        CALL find_rhosfz_scalar(p, ct, sa, sfz_coeffs, rho_loc)
+        rhoSF(i,j) = rho_loc
+
+       ENDDO
+      ENDDO
+      ENDIF
+#endif /* ALLOW_SFZ_THERMO */
 
       RETURN
       END
