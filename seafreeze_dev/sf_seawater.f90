@@ -32,7 +32,7 @@ MODULE sf_seawater
         SUBROUTINE load_gibbs_data()
         !   Loads the Gibbs data
             IMPLICIT NONE
-            INTEGER :: i_p, i_t, i_m, rc, wpos
+            INTEGER :: i_p, i_t, i_m, rc
 
             CALL set_grid_params(P0, T0, M0, dP, dT, dM, NP, NT, NM)    ! set the parameters of the grid
 
@@ -125,16 +125,6 @@ MODULE sf_seawater
             ! finally, fill out the spline coefficient array
             CALL calc_all_coeffs(G, dG_dP, dG_dT, dG_dM, d2G_dPdT, d2G_dPdM, d2G_dTdM, d3G_dPdTdM, spline_coeffs)
             TD_data_is_loaded = .true.
-           
-            PRINT *, spline_coeffs(1, 1, 1, :, :, :)
-            PRINT *, spline_coeffs(1, 1, 2, :, :, :)
-            PRINT *, spline_coeffs(1, 2, 1, :, :, :)
-            PRINT *, spline_coeffs(2, 1, 1, :, :, :)
-
-            ! write the data to binary
-            OPEN(UNIT=29, FILE='sfz_G_coeffs.dat', ACCESS='STREAM', form='UNFORMATTED')
-               WRITE(29) spline_coeffs
-            CLOSE(29)
 
         END SUBROUTINE load_gibbs_data
 
@@ -272,8 +262,6 @@ PROGRAM test_module
 
     theta = sw_ptmp(p, T, S)
     PRINT *, theta
-
-
 
 
 END PROGRAM test_module 
