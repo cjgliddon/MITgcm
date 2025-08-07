@@ -391,9 +391,9 @@ MODULE tricubic_mod
             a333 = coeffs(i_x,i_y,i_z,3,3,3)
 
             ! convert x, y, z to nondimensional coordinates
-            x_nd = (x - x0)/dx - AINT((x - x0)/dx) 
-            y_nd = (y - y0)/dy - AINT((y - y0)/dy)
-            z_nd = (z - z0)/dz - AINT((z - z0)/dz) 
+            x = (x - x0)/dx - AINT((x - x0)/dx) 
+            y = (y - y0)/dy - AINT((y - y0)/dy)
+            z = (z - z0)/dz - AINT((z - z0)/dz) 
 
             result = 0
             IF ((xder == 0) .AND. (yder == 0) .AND. (zder == 0)) THEN
@@ -409,23 +409,15 @@ MODULE tricubic_mod
                                                                               + z_nd*(a222 + z_nd*a223 + y_nd*(a232 + z_nd*a233) &
                                                                                +x_nd*(a322 + z_nd*a323 + y_nd*(a332 + z_nd*a333)))))))
             ELSE IF ((xder == 1) .AND. (yder == 0) .AND. (zder == 0)) THEN
-                result = a100 + 2*x_nd*(a200 + 3*x_nd*a300)                                                                                                 &
-                         + z_nd*(a101 + x_nd*(2*a201 + 3*a301*x_nd) + z_nd*(a102 + a103*z_nd + x_nd*(2*a202 + 3*a302*x_nd + z_nd*(2*a203 + 3*a303*x_nd))))  &
-                         + y_nd*(a110 + x_nd*(2*a210 + 3*a310*x_nd) + y_nd*(a120 + a130*y_nd + x_nd*(2*a220 + 3*a320*x_nd + y_nd*(2*a230 + 3*a330*x_nd)))   &
-                          + z_nd*(a111 + x_nd*(2*a211 + 3*a311*x_nd) + z_nd*(a112 + a113*z_nd + x_nd*(2*a212 + 3*a312*x_nd + z_nd*(2*a213 + 3*a313*x_nd)))  &
-                           + y_nd*(a121 + y_nd*a131 + x_nd*(2*a221 + 3*a321*x_nd + y_nd*(2*a231 + 3*a331*x_nd))                             &
-                            + z_nd*(a122 + y_nd*a132 + z_nd*(a123 + y_nd*a133) + x_nd*(2*a222 + 3*a322*x_nd + y_nd*(2*a232 + 3*a332*x_nd)   &
-                              + z_nd*(2*a223 + 2*y_nd*a233 + 3*x_nd*(a323 + a333*y_nd)))))))
+                result = a100 + a110*y + a120*y**2 + a130*y**3 + a101*z + a111*y*z + a121*(y**2)*z + a131*(y**3)*z + a102*z**2 + a112*y*z**2 + a122*(y**2)*(z**2) + a132*(y**3)*(z**2) + a103*z**3 + a113*y*z**3 + a123*(y**2)*z**3 + a133*(y**3)*z**3 &
+                         + 2*x*(a200 + a210*y + a220*y**2 + a230*y**3 + a201*z + a211*y*z + a221*(y**2)*z + a231*(y**3)*z + a202*z**2 + a212*y*z**2 + a222*(y**2)*(z**2) + a232*(y**3)*(z**2) + a203*z**3 + a213*y*z**3 + a223*(y**2)*z**3 + a233*(y**3)*z**3) &
+                         + 3*(x**2)*(a300 + a310*y + a320*y**2 + a330*y**3 + a301*z + a311*y*z + a321*(y**2)*z + a331*(y**3)*z + a302*z**2 + a312*y*z**2 + a322*(y**2)*(z**2) + a332*(y**3)*(z**2) + a303*z**3 + a313*y*z**3 + a323*(y**2)*z**3 + a333*(y**3)*z**3)
                 ! convert result back to dimensionful units
                 result = result / dx
             ELSE IF ((xder == 0) .AND. (yder == 1) .AND. (zder == 0)) THEN
-                result = a010 + 2*y_nd*(a020 + 3*y_nd*a030)                                                                                                 &
-                         + z_nd*(a011 + y_nd*(2*a021 + 3*a031*y_nd) + z_nd*(a012 + a013*z_nd + y_nd*(2*a022 + 3*a032*y_nd + z_nd*(2*a023 + 3*a033*y_nd))))  &
-                         + x_nd*(a110 + y_nd*(2*a120 + 3*a130*y_nd) + x_nd*(a210 + a310*x_nd + y_nd*(2*a220 + 3*a230*y_nd + x_nd*(2*a320 + 3*a330*y_nd)))   &
-                          + z_nd*(a111 + y_nd*(2*a121 + 3*a131*y_nd) + z_nd*(a112 + a113*z_nd + y_nd*(2*a122 + 3*a132*y_nd + z_nd*(2*a123 + 3*a133*y_nd)))  &
-                           + x_nd*(a211 + x_nd*a311 + y_nd*(2*a221 + 3*a231*y_nd + x_nd*(2*a321 + 3*a331*y_nd))                             &
-                            + z_nd*(a212 + x_nd*a312 + z_nd*(a213 + x_nd*a313) + y_nd*(2*a222 + 3*a232*y_nd + x_nd*(2*a322 + 3*a332*y_nd)   &
-                              + z_nd*(2*a223 + 2*x_nd*a323 + 3*y_nd*(a233 + a333*x_nd)))))))
+                result = a010 + a110*x + a210*x**2 + a310*x**3 + a011*z + a111*x*z + a211*(x**2)*z + a311*(x**3)*z + a012*z**2 + a112*x*z**2 + a212*(x**2)*(z**2) + a312*(x**3)*(z**2) + a013*z**3 + a113*x*z**3 + a213*(x**2)*z**3 + a313*(x**3)*z**3 &
+                         + 2*y*(a020 + a120*x + a220*x**2 + a320*x**3 + a021*z + a121*x*z + a221*(x**2)*z + a321*(x**3)*z + a022*z**2 + a122*x*z**2 + a222*(x**2)*(z**2) + a322*(x**3)*(z**2) + a023*z**3 + a123*x*z**3 + a223*(x**2)*z**3 + a323*(x**3)*z**3) &
+                         + 3*(y**2)*(a030 + a130*x + a230*x**2 + a330*x**3 + a031*z + a131*x*z + a231*(x**2)*z + a331*(x**3)*z + a032*z**2 + a132*x*z**2 + a232*(x**2)*(z**2) + a332*(x**3)*(z**2) + a033*z**3 + a133*x*z**3 + a233*(x**2)*z**3 + a333*(x**3)*z**3)
                 ! convert result back to dimensionful units
                 result = result / dy
             ELSE IF ((xder == 1) .AND. (yder == 1) .AND. (zder == 0)) THEN
