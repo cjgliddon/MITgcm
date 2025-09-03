@@ -1,0 +1,41 @@
+*** NOTES ON USING SHELFICE PACKAGE FOR ICY OCEAN WORLDS IN MITGCM ***
+Author: Coleman Gliddon, MIT EAPS
+
+Sources: https://mitgcm.readthedocs.io/en/latest/phys_pkgs/shelfice.html 
+
+Two files are required to specify the initial state of the shelf ice: SHELFICEtopoFile, which
+contains information about the initial topography of ice shelves below the ice/sea surface; and
+SHELFICEloadAnomalyFile, which contains information about the pressure load anomaly at the lower
+ice shelf-water interface. (This load anomaly must be specified explicitly, but can be calculated
+from the data in SHELFICEtopoFile using a hydrostatic pressure equation.)
+
+The bulk of the work is done in the shelfice_thermodynamics subroutine, the precise operation of
+which is heavily reconfigurable using various flags. 
+
+Also important are the subroutines in shelfice_step_icemass.F, which are where the actual
+*dynamics* of the moving ice boundaries take place, and shelfice_forcing_surf, which handles the
+thermal and salt forcings at the boundaries. 
+
+SHI_update_kTopC    : if true, this flags indicates that the location of the ice-seawater
+                      interface can be updated over time. kTopC is the index of the uppermost
+                      completely "wet" (ice-free) cell.
+SHI_ALLOW_GAMMAFRICT: allows for a velocity-dependent transfer coefficient.
+ALLOW_GENTIM2D_CONTROL  : who knows what this does, really?
+
+Key variables in shelfice package:
+gammaTurb       : a turbulence coefficient used in the thermal and freshwater flux calculations.
+                  May be velocity-dependent or set to a constant.
+kTopC           : the index of the highest grid cell where no ice is present
+a0,a1,...,c0    : coefficients for the freezing point calculation
+maskSHI         : 
+
+
+Key variables not in shelfice package:
+kSurfC          : the index of the "surface tracer cell" (location of the free surface in the
+                  model without shelf ice). There is an analogous index kLowC which gives the
+                  index of the *lowest* wet cell -- not relevant for shelfice, but good to know...
+hFac(C/S/W)     : fractional thickness of cells at the surface/lower boundary. These can be updated
+                  using the code in update_surf_dr.F (I think?). The labels "C", "S", "W" refer to
+                  the thicknesses in the center of the current cell and at the adjoining cells at
+                  the southern and western boundaries (I think?) 
+maskC
