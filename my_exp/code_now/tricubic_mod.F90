@@ -145,7 +145,7 @@ MODULE tricubic_mod
 !             INTEGER, INTENT(IN) :: xder, yder, zder
 !             REAL(8), INTENT(OUT) :: result
 ! 
-!             REAL(8) :: x_nd, y_nd, z_nd
+!             REAL(8) :: x, y, z
 !             REAL(8), DIMENSION(4, 4, 4) :: a
 !             INTEGER :: i, j, k
 ! 
@@ -153,16 +153,16 @@ MODULE tricubic_mod
 !             CALL compute_coeffs(x, y, z, f, dfdx, dfdy, dfdz, d2fdxdy, d2fdxdz, d2fdydz, d3fdxdydz, a)
 ! 
 !             ! convert x, y, z to nondimensional coordinates
-!             x_nd = (x - x0)/dx - AINT((x - x0)/dx) 
-!             y_nd = (y - y0)/dy - AINT((y - y0)/dy)
-!             z_nd = (z - z0)/dz - AINT((z - z0)/dz) 
+!             x = (x - x0)/dx - AINT((x - x0)/dx) 
+!             y = (y - y0)/dy - AINT((y - y0)/dy)
+!             z = (z - z0)/dz - AINT((z - z0)/dz) 
 ! 
 !             result = 0
 !             IF ((xder == 0) .AND. (yder == 0) .AND. (zder == 0)) THEN
 !                 DO i = 0, 3
 !                     DO j = 0, 3
 !                         DO k = 0, 3
-!                             result = result + a(i+1, j+1, k+1) * (x_nd ** i) * (y_nd ** j) * (z_nd ** k)
+!                             result = result + a(i+1, j+1, k+1) * (x ** i) * (y ** j) * (z ** k)
 !                         END DO
 !                     END DO
 !                 END DO
@@ -170,7 +170,7 @@ MODULE tricubic_mod
 !                 DO i = 0, 3
 !                     DO j = 0, 3
 !                         DO k = 0, 3
-!                             result = result + a(i+1, j+1, k+1) * i*(x_nd ** (i - 1)) * (y_nd ** j) * (z_nd ** k)
+!                             result = result + a(i+1, j+1, k+1) * i*(x ** (i - 1)) * (y ** j) * (z ** k)
 !                         END DO
 !                     END DO
 !                 END DO
@@ -180,7 +180,7 @@ MODULE tricubic_mod
 !                 DO i = 0, 3
 !                     DO j = 0, 3
 !                         DO k = 0, 3
-!                             result = result + a(i+1, j+1, k+1) * j*(x_nd ** i) * (y_nd ** (j - 1)) * (z_nd ** k)
+!                             result = result + a(i+1, j+1, k+1) * j*(x ** i) * (y ** (j - 1)) * (z ** k)
 !                         END DO
 !                     END DO
 !                 END DO
@@ -190,7 +190,7 @@ MODULE tricubic_mod
 !                 DO i = 0, 3
 !                     DO j = 0, 3
 !                         DO k = 0, 3
-!                             result = result + a(i+1, j+1, k+1) * i * j * (x_nd ** (i - 1)) * (y_nd ** (j - 1)) * (z_nd ** k)
+!                             result = result + a(i+1, j+1, k+1) * i * j * (x ** (i - 1)) * (y ** (j - 1)) * (z ** k)
 !                         END DO
 !                     END DO
 !                 END DO
@@ -200,7 +200,7 @@ MODULE tricubic_mod
 !                 DO i = 0, 3
 !                     DO j = 0, 3
 !                         DO k = 0, 3
-!                             result = result + a(i+1, j+1, k+1) * j * (j - 1) * (x_nd ** i) * (y_nd ** (j - 2)) * (z_nd ** k)
+!                             result = result + a(i+1, j+1, k+1) * j * (j - 1) * (x ** i) * (y ** (j - 2)) * (z ** k)
 !                         END DO
 !                     END DO
 !                 END DO
@@ -297,15 +297,15 @@ MODULE tricubic_mod
 
         END SUBROUTINE calc_all_coeffs 
 
-        SUBROUTINE calc_spline(x, y, z, xder, yder, zder, coeffs, result)
+        SUBROUTINE calc_spline(xin, yin, zin, xder, yder, zder, coeffs, result)
         !   Subroutine for calculating the value of the spline or one of its derivatives
             IMPLICIT NONE
-            REAL(8), INTENT(IN) :: x, y, z
+            REAL(8), INTENT(IN) :: xin, yin, zin
             INTEGER, INTENT(IN) :: xder, yder, zder
             REAL(8), DIMENSION(Nx-1, Ny-1, Nz-1, 4, 4, 4), INTENT(IN) :: coeffs
             REAL(8), INTENT(OUT) :: result
 
-            REAL(8) :: x_nd, y_nd, z_nd
+            REAL(8) :: x, y, z
             REAL(8) :: a000, a001, a002, a003, a010, a011, a012, a013, a020, a021, a022, a023, a030, a031, a032, a033, &
                        a100, a101, a102, a103, a110, a111, a112, a113, a120, a121, a122, a123, a130, a131, a132, a133, &
                        a200, a201, a202, a203, a210, a211, a212, a213, a220, a221, a222, a223, a230, a231, a232, a233, &
@@ -320,126 +320,134 @@ MODULE tricubic_mod
 !           PRINT *, 'Test coefficient : ', coeffs(13, 7, 5, 2, 1, 3)
 
             ! find the coordinates at which we need to access gridded values
-            i_x = AINT((x - x0)/dx, KIND(i_x)) + 1
-            i_y = AINT((y - y0)/dy, KIND(i_y)) + 1
-            i_z = AINT((z - z0)/dz, KIND(i_z)) + 1
+            i_x = AINT((xin - x0)/dx, KIND(i_x)) + 1
+            i_y = AINT((yin - y0)/dy, KIND(i_y)) + 1
+            i_z = AINT((zin - z0)/dz, KIND(i_z)) + 1
 
             ! and get the coefficients
-            a000 = coeffs(i_x,i_y,i_z,0,0,0)
-            a001 = coeffs(i_x,i_y,i_z,0,0,1)
-            a002 = coeffs(i_x,i_y,i_z,0,0,2)
-            a003 = coeffs(i_x,i_y,i_z,0,0,3)
-            a010 = coeffs(i_x,i_y,i_z,0,1,0)
-            a011 = coeffs(i_x,i_y,i_z,0,1,1)
-            a012 = coeffs(i_x,i_y,i_z,0,1,2)
-            a013 = coeffs(i_x,i_y,i_z,0,1,3)
-            a020 = coeffs(i_x,i_y,i_z,0,2,0)
-            a021 = coeffs(i_x,i_y,i_z,0,2,1)
-            a022 = coeffs(i_x,i_y,i_z,0,2,2)
-            a023 = coeffs(i_x,i_y,i_z,0,2,3)
-            a030 = coeffs(i_x,i_y,i_z,0,3,0)
-            a031 = coeffs(i_x,i_y,i_z,0,3,1)
-            a032 = coeffs(i_x,i_y,i_z,0,3,2)
-            a033 = coeffs(i_x,i_y,i_z,0,3,3)
-            a100 = coeffs(i_x,i_y,i_z,1,0,0)
-            a101 = coeffs(i_x,i_y,i_z,1,0,1)
-            a102 = coeffs(i_x,i_y,i_z,1,0,2)
-            a103 = coeffs(i_x,i_y,i_z,1,0,3)
-            a110 = coeffs(i_x,i_y,i_z,1,1,0)
-            a111 = coeffs(i_x,i_y,i_z,1,1,1)
-            a112 = coeffs(i_x,i_y,i_z,1,1,2)
-            a113 = coeffs(i_x,i_y,i_z,1,1,3)
-            a120 = coeffs(i_x,i_y,i_z,1,2,0)
-            a121 = coeffs(i_x,i_y,i_z,1,2,1)
-            a122 = coeffs(i_x,i_y,i_z,1,2,2)
-            a123 = coeffs(i_x,i_y,i_z,1,2,3)
-            a130 = coeffs(i_x,i_y,i_z,1,3,0)
-            a131 = coeffs(i_x,i_y,i_z,1,3,1)
-            a132 = coeffs(i_x,i_y,i_z,1,3,2)
-            a133 = coeffs(i_x,i_y,i_z,1,3,3)
-            a200 = coeffs(i_x,i_y,i_z,2,0,0)
-            a201 = coeffs(i_x,i_y,i_z,2,0,1)
-            a202 = coeffs(i_x,i_y,i_z,2,0,2)
-            a203 = coeffs(i_x,i_y,i_z,2,0,3)
-            a210 = coeffs(i_x,i_y,i_z,2,1,0)
-            a211 = coeffs(i_x,i_y,i_z,2,1,1)
-            a212 = coeffs(i_x,i_y,i_z,2,1,2)
-            a213 = coeffs(i_x,i_y,i_z,2,1,3)
-            a220 = coeffs(i_x,i_y,i_z,2,2,0)
-            a221 = coeffs(i_x,i_y,i_z,2,2,1)
-            a222 = coeffs(i_x,i_y,i_z,2,2,2)
-            a223 = coeffs(i_x,i_y,i_z,2,2,3)
-            a230 = coeffs(i_x,i_y,i_z,2,3,0)
-            a231 = coeffs(i_x,i_y,i_z,2,3,1)
-            a232 = coeffs(i_x,i_y,i_z,2,3,2)
-            a233 = coeffs(i_x,i_y,i_z,2,3,3)
-            a300 = coeffs(i_x,i_y,i_z,3,0,0)
-            a301 = coeffs(i_x,i_y,i_z,3,0,1)
-            a302 = coeffs(i_x,i_y,i_z,3,0,2)
-            a303 = coeffs(i_x,i_y,i_z,3,0,3)
-            a310 = coeffs(i_x,i_y,i_z,3,1,0)
-            a311 = coeffs(i_x,i_y,i_z,3,1,1)
-            a312 = coeffs(i_x,i_y,i_z,3,1,2)
-            a313 = coeffs(i_x,i_y,i_z,3,1,3)
-            a320 = coeffs(i_x,i_y,i_z,3,2,0)
-            a321 = coeffs(i_x,i_y,i_z,3,2,1)
-            a322 = coeffs(i_x,i_y,i_z,3,2,2)
-            a323 = coeffs(i_x,i_y,i_z,3,2,3)
-            a330 = coeffs(i_x,i_y,i_z,3,3,0)
-            a331 = coeffs(i_x,i_y,i_z,3,3,1)
-            a332 = coeffs(i_x,i_y,i_z,3,3,2)
-            a333 = coeffs(i_x,i_y,i_z,3,3,3)
+            a000 = coeffs(i_x,i_y,i_z,1,1,1)
+            a001 = coeffs(i_x,i_y,i_z,1,1,2)
+            a002 = coeffs(i_x,i_y,i_z,1,1,3)
+            a003 = coeffs(i_x,i_y,i_z,1,1,4)
+            a010 = coeffs(i_x,i_y,i_z,1,2,1)
+            a011 = coeffs(i_x,i_y,i_z,1,2,2)
+            a012 = coeffs(i_x,i_y,i_z,1,2,3)
+            a013 = coeffs(i_x,i_y,i_z,1,2,4)
+            a020 = coeffs(i_x,i_y,i_z,1,3,1)
+            a021 = coeffs(i_x,i_y,i_z,1,3,2)
+            a022 = coeffs(i_x,i_y,i_z,1,3,3)
+            a023 = coeffs(i_x,i_y,i_z,1,3,4)
+            a030 = coeffs(i_x,i_y,i_z,1,4,1)
+            a031 = coeffs(i_x,i_y,i_z,1,4,2)
+            a032 = coeffs(i_x,i_y,i_z,1,4,3)
+            a033 = coeffs(i_x,i_y,i_z,1,4,4)
+            a100 = coeffs(i_x,i_y,i_z,2,1,1)
+            a101 = coeffs(i_x,i_y,i_z,2,1,2)
+            a102 = coeffs(i_x,i_y,i_z,2,1,3)
+            a103 = coeffs(i_x,i_y,i_z,2,1,4)
+            a110 = coeffs(i_x,i_y,i_z,2,2,1)
+            a111 = coeffs(i_x,i_y,i_z,2,2,2)
+            a112 = coeffs(i_x,i_y,i_z,2,2,3)
+            a113 = coeffs(i_x,i_y,i_z,2,2,4)
+            a120 = coeffs(i_x,i_y,i_z,2,3,1)
+            a121 = coeffs(i_x,i_y,i_z,2,3,2)
+            a122 = coeffs(i_x,i_y,i_z,2,3,3)
+            a123 = coeffs(i_x,i_y,i_z,2,3,4)
+            a130 = coeffs(i_x,i_y,i_z,2,4,1)
+            a131 = coeffs(i_x,i_y,i_z,2,4,2)
+            a132 = coeffs(i_x,i_y,i_z,2,4,3)
+            a133 = coeffs(i_x,i_y,i_z,2,4,4)
+            a200 = coeffs(i_x,i_y,i_z,3,1,1)
+            a201 = coeffs(i_x,i_y,i_z,3,1,2)
+            a202 = coeffs(i_x,i_y,i_z,3,1,3)
+            a203 = coeffs(i_x,i_y,i_z,3,1,4)
+            a210 = coeffs(i_x,i_y,i_z,3,2,1)
+            a211 = coeffs(i_x,i_y,i_z,3,2,2)
+            a212 = coeffs(i_x,i_y,i_z,3,2,3)
+            a213 = coeffs(i_x,i_y,i_z,3,2,4)
+            a220 = coeffs(i_x,i_y,i_z,3,3,1)
+            a221 = coeffs(i_x,i_y,i_z,3,3,2)
+            a222 = coeffs(i_x,i_y,i_z,3,3,3)
+            a223 = coeffs(i_x,i_y,i_z,3,3,4)
+            a230 = coeffs(i_x,i_y,i_z,3,4,1)
+            a231 = coeffs(i_x,i_y,i_z,3,4,2)
+            a232 = coeffs(i_x,i_y,i_z,3,4,3)
+            a233 = coeffs(i_x,i_y,i_z,3,4,4)
+            a300 = coeffs(i_x,i_y,i_z,4,1,1)
+            a301 = coeffs(i_x,i_y,i_z,4,1,2)
+            a302 = coeffs(i_x,i_y,i_z,4,1,3)
+            a303 = coeffs(i_x,i_y,i_z,4,1,4)
+            a310 = coeffs(i_x,i_y,i_z,4,2,1)
+            a311 = coeffs(i_x,i_y,i_z,4,2,2)
+            a312 = coeffs(i_x,i_y,i_z,4,2,3)
+            a313 = coeffs(i_x,i_y,i_z,4,2,4)
+            a320 = coeffs(i_x,i_y,i_z,4,3,1)
+            a321 = coeffs(i_x,i_y,i_z,4,3,2)
+            a322 = coeffs(i_x,i_y,i_z,4,3,3)
+            a323 = coeffs(i_x,i_y,i_z,4,3,4)
+            a330 = coeffs(i_x,i_y,i_z,4,4,1)
+            a331 = coeffs(i_x,i_y,i_z,4,4,2)
+            a332 = coeffs(i_x,i_y,i_z,4,4,3)
+            a333 = coeffs(i_x,i_y,i_z,4,4,4)
 
             ! convert x, y, z to nondimensional coordinates
-            x = (x - x0)/dx - AINT((x - x0)/dx) 
-            y = (y - y0)/dy - AINT((y - y0)/dy)
-            z = (z - z0)/dz - AINT((z - z0)/dz) 
+            x = (xin - x0)/dx - AINT((xin - x0)/dx) 
+            y = (yin - y0)/dy - AINT((yin - y0)/dy)
+            z = (zin - z0)/dz - AINT((zin - z0)/dz) 
 
             result = 0
             IF ((xder == 0) .AND. (yder == 0) .AND. (zder == 0)) THEN
-                result =   a000 + z_nd*(a001 + z_nd*(a002 + z_nd*a003))                                         &
-                         + y_nd*(a010 + y_nd*(a020 + y_nd*a030) + z_nd*( a011 + z_nd*(a012 + z_nd*a013))        &
-                                 + y_nd*(a021 + y_nd*a031 + z_nd*(a022 + z_nd*a023 + y_nd*(a032 + z_nd*a033)))) &
-                         + x_nd*(a100 + x_nd*(a200 + x_nd*a300) + z_nd*(a101 + z_nd*(a102 + z_nd*a103) &
-                                                                        + x_nd*( a201 + x_nd*a301 + z_nd*(a202 + z_nd*a203 + x_nd*(a302 + z_nd*a303)))) &
-                                 + y_nd*(a110 + y_nd*(a120 + y_nd*a130) + x_nd*( a210 + x_nd*a310 + y_nd*(a220 + y_nd*a230 + x_nd*(a320 + y_nd*a330)))  &
-                                        + z_nd*(a111 + z_nd*(a112 + z_nd*a113) + y_nd*(a121 + y_nd*a131 + z_nd*(a112 + z_nd*a123 + y_nd*(a132 + z_nd*a133))) &
-                                                + a211 + x_nd*a311 + z_nd*(a121 + z_nd*a213 + x_nd*(a312 + z_nd*a313))           &
-                                                                           + y_nd*(a221 + y_nd*a231 + x_nd*(a321 + y_nd*a331)    &
-                                                                              + z_nd*(a222 + z_nd*a223 + y_nd*(a232 + z_nd*a233) &
-                                                                               +x_nd*(a322 + z_nd*a323 + y_nd*(a332 + z_nd*a333)))))))
+                result =   a000 + z*(a001 + z*(a002 + z*a003))                                         &
+                         + y*(a010 + y*(a020 + y*a030) + z*( a011 + z*(a012 + z*a013))        &
+                                 + y*(a021 + y*a031 + z*(a022 + z*a023 + y*(a032 + z*a033)))) &
+                         + x*(a100 + x*(a200 + x*a300) + z*(a101 + z*(a102 + z*a103) &
+                                                                    + x*( a201 + x*a301 + z*(a202 + z*a203 + x*(a302 + z*a303)))) &
+                                 + y*(a110 + y*(a120 + y*a130) + x*( a210 + x*a310 + y*(a220 + y*a230 + x*(a320 + y*a330)))  &
+                                        + z*(a111 + z*(a112 + z*a113) + y*(a121 + y*a131 + z*(a112 + z*a123 + y*(a132 + z*a133))) &
+                                                + a211 + x*a311 + z*(a121 + z*a213 + x*(a312 + z*a313))           &
+                                                                           + y*(a221 + y*a231 + x*(a321 + y*a331)    &
+                                                                              + z*(a222 + z*a223 + y*(a232 + z*a233) &
+                                                                               +x*(a322 + z*a323 + y*(a332 + z*a333)))))))
             ELSE IF ((xder == 1) .AND. (yder == 0) .AND. (zder == 0)) THEN
-                result = a100 + a110*y + a120*y**2 + a130*y**3 + a101*z + a111*y*z + a121*(y**2)*z + a131*(y**3)*z + a102*z**2 + a112*y*z**2 + a122*(y**2)*(z**2) + a132*(y**3)*(z**2) + a103*z**3 + a113*y*z**3 + a123*(y**2)*z**3 + a133*(y**3)*z**3 &
-                         + 2*x*(a200 + a210*y + a220*y**2 + a230*y**3 + a201*z + a211*y*z + a221*(y**2)*z + a231*(y**3)*z + a202*z**2 + a212*y*z**2 + a222*(y**2)*(z**2) + a232*(y**3)*(z**2) + a203*z**3 + a213*y*z**3 + a223*(y**2)*z**3 + a233*(y**3)*z**3) &
-                         + 3*(x**2)*(a300 + a310*y + a320*y**2 + a330*y**3 + a301*z + a311*y*z + a321*(y**2)*z + a331*(y**3)*z + a302*z**2 + a312*y*z**2 + a322*(y**2)*(z**2) + a332*(y**3)*(z**2) + a303*z**3 + a313*y*z**3 + a323*(y**2)*z**3 + a333*(y**3)*z**3)
+                result = a100 + a110*y + a120*y**2 + a130*y**3 + a101*z + a111*y*z + a121*(y**2)*z + a131*(y**3)*z + a102*z**2 &
+                    + a112*y*z**2 + a122*(y**2)*(z**2) + a132*(y**3)*(z**2) + a103*z**3 + a113*y*z**3 + a123*(y**2)*z**3 + a133*(y**3)*z**3 &
+                         + 2*x*(a200 + a210*y + a220*y**2 + a230*y**3 + a201*z + a211*y*z + a221*(y**2)*z + a231*(y**3)*z + a202*z**2 &
+                         + a212*y*z**2 + a222*(y**2)*(z**2) + a232*(y**3)*(z**2) + a203*z**3 + a213*y*z**3 + a223*(y**2)*z**3&
+                          + a233*(y**3)*z**3) &
+                         + 3*(x**2)*(a300 + a310*y + a320*y**2 + a330*y**3 + a301*z + a311*y*z + a321*(y**2)*z + a331*(y**3)*z &
+                         + a302*z**2 + a312*y*z**2 + a322*(y**2)*(z**2) + a332*(y**3)*(z**2) + a303*z**3 + a313*y*z**3 + a323*(y**2)*z**3 + a333*(y**3)*z**3)
                 ! convert result back to dimensionful units
                 result = result / dx
             ELSE IF ((xder == 0) .AND. (yder == 1) .AND. (zder == 0)) THEN
-                result = a010 + a110*x + a210*x**2 + a310*x**3 + a011*z + a111*x*z + a211*(x**2)*z + a311*(x**3)*z + a012*z**2 + a112*x*z**2 + a212*(x**2)*(z**2) + a312*(x**3)*(z**2) + a013*z**3 + a113*x*z**3 + a213*(x**2)*z**3 + a313*(x**3)*z**3 &
-                         + 2*y*(a020 + a120*x + a220*x**2 + a320*x**3 + a021*z + a121*x*z + a221*(x**2)*z + a321*(x**3)*z + a022*z**2 + a122*x*z**2 + a222*(x**2)*(z**2) + a322*(x**3)*(z**2) + a023*z**3 + a123*x*z**3 + a223*(x**2)*z**3 + a323*(x**3)*z**3) &
-                         + 3*(y**2)*(a030 + a130*x + a230*x**2 + a330*x**3 + a031*z + a131*x*z + a231*(x**2)*z + a331*(x**3)*z + a032*z**2 + a132*x*z**2 + a232*(x**2)*(z**2) + a332*(x**3)*(z**2) + a033*z**3 + a133*x*z**3 + a233*(x**2)*z**3 + a333*(x**3)*z**3)
+                result = a010 + a110*x + a210*x**2 + a310*x**3 + a011*z + a111*x*z + a211*(x**2)*z + a311*(x**3)*z &
+                + a012*z**2 + a112*x*z**2 + a212*(x**2)*(z**2) + a312*(x**3)*(z**2) + a013*z**3 + a113*x*z**3 + a213*(x**2)*z**3 &
+                + a313*(x**3)*z**3 + 2*y*(a020 + a120*x + a220*x**2 + a320*x**3 + a021*z + a121*x*z + a221*(x**2)*z + a321*(x**3)*z &
+                + a022*z**2 + a122*x*z**2 + a222*(x**2)*(z**2) + a322*(x**3)*(z**2) + a023*z**3 + a123*x*z**3 + a223*(x**2)*z**3 &
+                + a323*(x**3)*z**3) + 3*(y**2)*(a030 + a130*x + a230*x**2 + a330*x**3 + a031*z + a131*x*z + a231*(x**2)*z &
+                + a331*(x**3)*z + a032*z**2 + a132*x*z**2 + a232*(x**2)*(z**2) + a332*(x**3)*(z**2) + a033*z**3 + a133*x*z**3&
+                + a233*(x**2)*z**3 + a333*(x**3)*z**3)
                 ! convert result back to dimensionful units
                 result = result / dy
             ELSE IF ((xder == 1) .AND. (yder == 1) .AND. (zder == 0)) THEN
-                result = a110 + 2*x_nd*a210 + 3*a310*x_nd**2 + 2*y_nd*a120 + 3*a130*y_nd**2 + 4*a220*x_nd*y_nd + 6*a320*y_nd*x_nd**2 + 6*a230*x_nd*y_nd**2  &
-                            + 9*a330*(x_nd**2)*(y_nd**2)    &
-                         + a111*z_nd + 2*x_nd*a211*z_nd + 3*a311*z_nd*x_nd**2 + 2*y_nd*a121*z_nd + 3*a131*z_nd*y_nd**2 + 4*a221*x_nd*y_nd*z_nd &
-                         + 6*a321*z_nd*y_nd*x_nd**2 + 6*a231*z_nd*x_nd*y_nd**2 + 9*a331*z_nd*(x_nd**2)*(y_nd**2)    & 
-                         + a112*z_nd**2 + 2*x_nd*a212*z_nd**2 + 3*a312*(z_nd**2)*x_nd**2 + 2*y_nd*a122*z_nd**2 + 3*a132*(z_nd**2)*y_nd**2 + 4*a222*x_nd*y_nd*z_nd**2 &
-                         + 6*a322*(z_nd**2)*y_nd*x_nd**2 + 6*a232*(z_nd**2)*x_nd*y_nd**2 + 9*a332*(z_nd**2)*(x_nd**2)*(y_nd**2)    & 
-                         + a113*z_nd**3 + 2*x_nd*a213*z_nd**3 + 3*a313*(z_nd**3)*x_nd**2 + 2*y_nd*a123*z_nd**3 + 3*a133*(z_nd**3)*y_nd**2 + 4*a223*x_nd*y_nd*z_nd**3 &
-                         + 6*a323*(z_nd**3)*y_nd*x_nd**2 + 6*a233*(z_nd**3)*x_nd*y_nd**2 + 9*a333*(z_nd**3)*(x_nd**2)*(y_nd**2)
+                result = a110 + 2*x*a210 + 3*a310*x**2 + 2*y*a120 + 3*a130*y**2 + 4*a220*x*y + 6*a320*y*x**2 + 6*a230*x*y**2  &
+                            + 9*a330*(x**2)*(y**2)    &
+                         + a111*z + 2*x*a211*z + 3*a311*z*x**2 + 2*y*a121*z + 3*a131*z*y**2 + 4*a221*x*y*z &
+                         + 6*a321*z*y*x**2 + 6*a231*z*x*y**2 + 9*a331*z*(x**2)*(y**2)    & 
+                         + a112*z**2 + 2*x*a212*z**2 + 3*a312*(z**2)*x**2 + 2*y*a122*z**2 + 3*a132*(z**2)*y**2 + 4*a222*x*y*z**2 &
+                         + 6*a322*(z**2)*y*x**2 + 6*a232*(z**2)*x*y**2 + 9*a332*(z**2)*(x**2)*(y**2)    & 
+                         + a113*z**3 + 2*x*a213*z**3 + 3*a313*(z**3)*x**2 + 2*y*a123*z**3 + 3*a133*(z**3)*y**2 + 4*a223*x*y*z**3 &
+                         + 6*a323*(z**3)*y*x**2 + 6*a233*(z**3)*x*y**2 + 9*a333*(z**3)*(x**2)*(y**2)
                 ! convert result back to dimensionful units
                 result = result / (dx * dy)
             ELSE IF ((xder == 1) .AND. (yder == 0) .AND. (zder == 1)) THEN
-                result = a101 + 2*x_nd*a201 + 3*a301*x_nd**2 + 2*z_nd*a102 + 3*a103*z_nd**2 + 4*a202*x_nd*z_nd + 6*a302*z_nd*x_nd**2 + 6*a203*x_nd*z_nd**2  &
-                            + 9*a303*(x_nd**2)*(z_nd**2)    &
-                         + a111*y_nd + 2*x_nd*a211*y_nd + 3*a311*y_nd*x_nd**2 + 2*z_nd*a112*y_nd + 3*a113*y_nd*z_nd**2 + 4*a212*x_nd*z_nd*y_nd &
-                         + 6*a312*y_nd*z_nd*x_nd**2 + 6*a213*y_nd*x_nd*z_nd**2 + 9*a313*y_nd*(x_nd**2)*(z_nd**2)    & 
-                         + a121*y_nd**2 + 2*x_nd*a221*y_nd**2 + 3*a321*(y_nd**2)*x_nd**2 + 2*z_nd*a122*y_nd**2 + 3*a123*(y_nd**2)*z_nd**2 + 4*a222*x_nd*z_nd*y_nd**2 &
-                         + 6*a322*(y_nd**2)*z_nd*x_nd**2 + 6*a223*(y_nd**2)*x_nd*z_nd**2 + 9*a323*(y_nd**2)*(x_nd**2)*(z_nd**2)    & 
-                         + a131*y_nd**3 + 2*x_nd*a231*y_nd**3 + 3*a331*(y_nd**3)*x_nd**2 + 2*z_nd*a132*y_nd**3 + 3*a133*(y_nd**3)*z_nd**2 + 4*a232*x_nd*z_nd*y_nd**3 &
-                         + 6*a332*(y_nd**3)*z_nd*x_nd**2 + 6*a233*(y_nd**3)*x_nd*z_nd**2 + 9*a333*(y_nd**3)*(x_nd**2)*(z_nd**2)
+                result = a101 + 2*x*a201 + 3*a301*x**2 + 2*z*a102 + 3*a103*z**2 + 4*a202*x*z + 6*a302*z*x**2 + 6*a203*x*z**2  &
+                            + 9*a303*(x**2)*(z**2)    &
+                         + a111*y + 2*x*a211*y + 3*a311*y*x**2 + 2*z*a112*y + 3*a113*y*z**2 + 4*a212*x*z*y &
+                         + 6*a312*y*z*x**2 + 6*a213*y*x*z**2 + 9*a313*y*(x**2)*(z**2)    & 
+                         + a121*y**2 + 2*x*a221*y**2 + 3*a321*(y**2)*x**2 + 2*z*a122*y**2 + 3*a123*(y**2)*z**2 + 4*a222*x*z*y**2 &
+                         + 6*a322*(y**2)*z*x**2 + 6*a223*(y**2)*x*z**2 + 9*a323*(y**2)*(x**2)*(z**2)    & 
+                         + a131*y**3 + 2*x*a231*y**3 + 3*a331*(y**3)*x**2 + 2*z*a132*y**3 + 3*a133*(y**3)*z**2 + 4*a232*x*z*y**3 &
+                         + 6*a332*(y**3)*z*x**2 + 6*a233*(y**3)*x*z**2 + 9*a333*(y**3)*(x**2)*(z**2)
                 ! convert result back to dimensionful units
                 result = result / (dx * dz)
             ELSE IF ((xder == 0) .AND. (yder == 2) .AND. (zder == 0)) THEN
