@@ -29,9 +29,9 @@ iceshelf_dragcoef=1e-4; % m/s, momentum exchange rate between ice and ocean
 
 %% domain
 Htot=76e3;
-nx=80 ; ny=672 ;
+nx=20; ny=84;
 nr=70;
-dx=0.25 ; dy=0.25 ; yyM=84 ; % yyM set latitudinal range yyM degS to yyM degN
+dx=2 ; dy=2 ; yyM=84 ; % yyM set latitudinal range yyM degS to yyM degN
 
 %% ocean salinity, equation of state
 Sref=60;

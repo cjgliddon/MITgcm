@@ -121,10 +121,10 @@ pCellMix_select=30,
 pCellMix_viscAr=1,
 usingSphericalPolarGrid=.TRUE.,
 #flat
-delR= 19000.0, 52*500.0, 700.0, 1000.0, 1300.0, 1700.0, 12*2000.0, 2300.0
+delR= 3000.0, 52*500.0, 700.0, 1000.0, 1300.0, 1700.0, 12*2000.0, 2300.0
 ygOrigin=-84.,
-delY=672*0.25,
-delX=80*0.3,
+delY=84*2,
+delX=20*2,
 rSphere=250000.000000,
 deepAtmosphere=.TRUE.,
 &

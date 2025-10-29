@@ -77,7 +77,7 @@ if [[ $TODO == *"compile"* ]]; then
     ln -s ../code/SIZE.h SIZE.h
     if [[ $OMP_NUM_THREADS == 1 ]]; then
       # mpi only
-      ${MITGCMRT}/tools/genmake2 -mods ../code -of ${OPTFILE} -mpi
+      ${MITGCMRT}/tools/genmake2 -mods ../code -of ${OPTFILE} -devel
     else
       # mpi + openmp (mth)
       ${MITGCMRT}/tools/genmake2 -mods ../code -of ${OPTFILE} -mpi -omp

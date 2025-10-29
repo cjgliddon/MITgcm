@@ -312,6 +312,8 @@ C          wykang add new variables
      &     ,Htide
      &     ,Hcond
      &     ,Hmixbend
+C          cjg add new variables for floorice
+     &     ,flooriceForcingT, flooriceForcingS
 
       _RL shelficeMass          (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL shelficeMassInit      (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
@@ -324,6 +326,10 @@ C     wykang: add new namelist variable
       _RL Htide                 (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL Hmixbend              (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL Hcond                 (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+C     CJG:    new variables for floorice 
+      _RL flooriceForcingT      (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL flooriceForcingS      (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+
 
       COMMON /SHELFICE_GAMMA_RL/
      &     shiTransCoeffT, shiTransCoeffS
