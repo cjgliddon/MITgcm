@@ -42,7 +42,6 @@ C     diagTitle :: local string (80c): description of field in diagnostic
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
       IF ( useDiagnostics ) THEN
-
         diagName  = 'MYPaSta1'
         diagTitle = 'Scalar state variable 1 for package MYPACKAGE'
         diagUnits = 'unit            '

@@ -13,6 +13,8 @@ C     !Input/output variables:
       INTEGER myThid
 C     !Internal variables
 CEOP
+
+      
       END
 
 C     *=============================================================*
@@ -141,6 +143,7 @@ C     !Global variables:
 #include "DYNVARS.h"
 #include "SHELFICE.h"
 #include "GRID.h"
+#include "MNC_PARAMS.h"
 
 C     !Input/output variables:
       _RL     myTime
@@ -178,6 +181,9 @@ C     ! initialization
       gammaOceanT = 1. _d 0
       gammaOceanS = 1. _d 0
       kappaIce = 1.54 _d -06
+C     This is an order of magnitude estimate from Vance et al. 2014
+C     TODO: make a namelist variable
+      TGradIce = 1. _d -4
 
       do bj = myByLo(myThid), myByHi(myThid)
        do bi = myBxLo(myThid), myBxHi(myThid)
@@ -185,30 +191,50 @@ C     ! initialization
          do I = 1, sNx
           flooriceforcingT(I,J,bi,bj) = 0. _d 0
           flooriceforcingS(I,J,bi,bj) = 0. _d 0
-          K = kLowC(I,J,bi,bj)       
-          sLoc(I,J) = MAX(salt(I,J,K,bi,bj), zeroRL)
+          K = kLowC(I,J,bi,bj)
+          if (K > 0) then       
+           sLoc(I,J) = MAX(salt(I,J,K,bi,bj), zeroRL)
 C     TODO: make pressure more accurate
-          pLoc(I,J) = pRef4EOS(K)                     
-          rhoLoc(I,J) = rhoInSitu(I,J,K,bi,bj)
-          tLoc(I,J) = SW_TEMP(sLoc(I,J),theta(I,J,K,bi,bj),
-     &                        pLoc(I,J),zeroRL)
+           pLoc(I,J) = pRef4EOS(K)*1. _d -4                     
+C     TODO: Check if this bug fix is reasonable. Since rhoInSitu
+C     doesn't seem to have been calculated at this point I wrote
+C     this line           
+           rhoLoc(I,J) = MAX(rhoInSitu(I,J,K,bi,bj), rhoRef(K))
+C           PRINT *, "Diagnostics for tLoc at I,J,K:", I,J,K
+C           PRINT *, "Salinity:", sloc(I,J)
+C           PRINT *, "PTemp:", theta(I,J,K,bi,bj)
+C           PRINT *, "Pressure:", pLoc(I,J)
+           tLoc(I,J) = SW_TEMP(sLoc(I,J),theta(I,J,K,bi,bj),
+     &                         pLoc(I,J),zeroRL)
 C     Derived quantities 
-          sBL(I,J) = (sLoc(I,J)*rhoLoc(I,J)*gammaOceanS - 
-     &     sIce*ice_dmdt(I,J))/(rhoLoc(I,J)*gammaOceanS - 
-     &     ice_dmdt(I,J))
-          tBL(I,J) = aEOS*pLoc(I,J) + bEOS*sBL(I,J) + cEOS
-          TFluxOc(I,J) = (rhoLoc(I,J)*gammaOceanT + 
-     &     ice_dmdt(I,J))*(tLoc(I,J) - tBL(I,J))
-          Qtidal(I,J,bi,bj) = rhoIce*CpIce*kappaIce*TGradIce - 
-     &     FLOORICELatentHeat*ice_dmdt(I,J) - 
-     &     HeatCapacity_Cp*TFluxOc(I,J)
-          PRINT *, "Tidal heating at (I,J,bi,bj)", I,J,bi,bj
-          PRINT *, "equals: ", Qtidal(I,J,bi,bj)
-          flooriceForcingT(I,J,bi,bj) = TFluxOc(I,J)/rhoLoc(I,J)
-          flooriceForcingS(I,J,bi,bj) = ice_dmdt(I,J)*
-     &     (sBL(I,J) - sIce)/rhoLoc(I,J)
+C           PRINT *, "rhoLoc:", rhoLoc(I,J)
+C           PRINT *, "ice_dmdt", ice_dmdt(I,J)
+           sBL(I,J) = (sLoc(I,J)*rhoLoc(I,J)*gammaOceanS - 
+     &      sIce*ice_dmdt(I,J))/(rhoLoc(I,J)*gammaOceanS - 
+     &      ice_dmdt(I,J))
+           tBL(I,J) = aEOS*pLoc(I,J) + bEOS*sBL(I,J) + cEOS
+           TFluxOc(I,J) = (rhoLoc(I,J)*gammaOceanT + 
+     &      ice_dmdt(I,J))*(tLoc(I,J) - tBL(I,J))
+           Qtidal(I,J,bi,bj) = rhoIce*CpIce*kappaIce*TGradIce - 
+     &      FLOORICELatentHeat*ice_dmdt(I,J) - 
+     &      HeatCapacity_Cp*TFluxOc(I,J)
+C           PRINT *, "Diagnostics at (I, J, bi, bj):", I,J,bi,bj
+C           PRINT *, "Local temperature:", tLoc(I,J)
+C           PRINT *, "BL temperature:", tBL(I,J)
+C           PRINT *, "Local salinity:", sBL(I,J)
+C           PRINT *, "Temp flux:", TFluxOc(I,J)
+C           PRINT *, "Tidal heating: ", Qtidal(I,J,bi,bj)
+           flooriceForcingT(I,J,bi,bj) = TFluxOc(I,J)/rhoLoc(I,J)
+           flooriceForcingS(I,J,bi,bj) = ice_dmdt(I,J)*
+     &      (sBL(I,J) - sIce)/rhoLoc(I,J)
+          endif
          enddo
         enddo
+C           TODO: add diagnostics to init_fixed
+        CALL DIAGNOSTICS_FILL( TFluxOc, 'TFlux_LB', 
+     &            0, 1, 2, bi, bj, myThid )
        enddo
       enddo
+      CALL DIAGNOSTICS_FILL( Qtidal, 'QtidalLB', 
+     &            0, 1, 0, 1, 1, myThid )
       END

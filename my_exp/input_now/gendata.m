@@ -6,7 +6,7 @@ addpath(genpath([MITROOT,'/MITgcm/my_exp/gsw/'])); % gsw needs to be put under t
 %% initial condition
 restartTS=0; % 0: don't use restart T/S, 1: use horizontal averaged profile, 2: use zonal mean, 3: use 3d, negative: don't write new IC files, 4: interpolate pickup files as IC, 5: interpolate pickup files as new restart file, 6: take diff between two states and use it to step current state forward to achieve faster convergence.
 restartTSpath=''; % used when restartTS>0
-restartname=''; % used when restartTS=0
+restartname=''; % used when restartTS=0. CG: should this read restartTS != 0?
 gridpath='./'; % used when restartTS>3
 restartTSiter=0; % NaN means time mean (for restartTS==1,2,3 only), otherwise need to specify an iteration number (for restartTS>0)
 
@@ -107,6 +107,7 @@ clat=cosd(yc);slat=sind(yc);
 %dh= [18e3,2e3*ones([1,29])]; % https://kiss.caltech.edu/workshops/oceanworlds/presentations/Prockter.pdf, page 53
 dh= [19e3,0.5e3*ones([1,52]),0.7e3,1.e3,1.3e3,1.7e3,2e3*ones([1,12]),2.3e3]; % total 76km
 hf=[0,cumsum(dh)];
+% Legendre polynomials in latitude
 P1=slat;
 P2=(3/2).*slat.^2-(1/2);
 P3=(5/2).*slat.^3-(3/2).*slat;
@@ -188,6 +189,7 @@ else
 end
 
 %% -- ice shelf topography and thickness
+% We treat the ice as floating on the surface; this gives the fraction of the ice thickness that's "underwater"
 Hunder=-(rhoice/rhoNil).*Hice;
 if (length(appendix)==0)
 fname='icetopo.bin';
