@@ -388,14 +388,6 @@ C  compiling pkg/autodiff (with "If useShelfIce" inside shelfice_init_varia.F)
 # endif
 #endif /* ALLOW_SHELFICE */
 
-C     Additions for icy ocean world floor ice modeling (CJG)
-C #ifdef ALLOW_SEAFRZ
-C      IF ( useSeaFrz )
-        CALL FLOORICE_INIT_VARIA( myThid
-     &                                   )
-c    &         , drF, recip_drF, kLowC, hFacC, recip_hFacC )
-C #endif /* ALLOW_SEAFRZ */
-
 #ifdef ALLOW_STEEP_ICECAVITY
 # ifdef ALLOW_AUTODIFF
 C- Note: use same trick as for pkg/gmredi (call to GMREDI_INIT_VARIA) when
@@ -557,6 +549,14 @@ C--   Initialise the 2-Way Nesting packages variables
         CALL MYPACKAGE_INIT_VARIA( myThid )
       ENDIF
 #endif /* ALLOW_MYPACKAGE */
+
+#ifdef ALLOW_SEAFRZ
+      IF ( useSEAFRZ ) THEN
+        CALL SEAFRZ_INIT_VARIA( myThid )
+      ENDIF
+#endif /* ALLOW_SEAFRZ */
+
+
 
 #ifdef ALLOW_AUTODIFF_TAMC
 CADJ STORE theta  = tapelev_init, key = 1

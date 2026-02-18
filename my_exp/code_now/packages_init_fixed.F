@@ -453,12 +453,6 @@ C--   Initialise fixed array for Float pkg
       ENDIF
 #endif /* ALLOW_SHELFICE */
 
-C     Additions for icy ocean world floor ice modeling (CJG)
-C #ifdef ALLOW_SEAFRZ
-C      IF ( useSeaFrz )
-        CALL FLOORICE_INIT_FIXED( myThid )
-C #endif /* ALLOW_SEAFRZ */
-
 #ifdef ALLOW_STEEP_ICECAVITY
       IF (useSTIC) THEN
 # ifdef ALLOW_DEBUG
@@ -645,6 +639,17 @@ C--   needs to be called after the OASIS_INIT
         CALL MYPACKAGE_INIT_FIXED(myThid)
       ENDIF
 #endif
+
+#ifdef ALLOW_SEAFRZ
+      IF (useSEAFRZ) THEN
+# ifdef ALLOW_DEBUG
+        IF (debugMode) CALL DEBUG_CALL('SEAFRZ_INIT_FIXED',myThid)
+# endif
+        CALL SEAFRZ_INIT_FIXED(myThid)
+      ENDIF
+#endif
+
+
 
 #ifdef ALLOW_CTRL
       IF (useCTRL) THEN

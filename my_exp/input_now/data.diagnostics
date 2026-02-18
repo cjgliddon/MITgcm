@@ -59,6 +59,12 @@ frequency(5)=31104000.,
                   'USidDrag','Um_Ext  ','Um_AdvZ3',
    fileName(6) = 'momDiag',
   frequency(6) = 31104000.,
+
+fields(1:3,7) = 'SfzLQflx', 'SfzLSflx', 'SfzLdmdt',
+fileName(7) = 'sfzDiag',
+frequency(7)=31104000.,
+
+
  &
 
 #--------------------

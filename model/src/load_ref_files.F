@@ -144,6 +144,7 @@ C       extrapolate down to the bottom:
         gravFacF(Nr+1) = ( gravFacC(Nr)*(rF(Nr+1)-rF(Nr))
      &                   + gravFacF(Nr)*(rC(Nr)-rF(Nr+1))
      &                   ) / (rC(Nr)-rF(Nr))
+        
 C-      set reciprocal gravity-factor:
         DO k=1,Nr
           recip_gravFacC(k) = 1. _d 0/gravFacC(k)

@@ -52,7 +52,8 @@ CEOP
      &           nPy =   1,
      &           Nx  = sNx*nSx*nPx,
      &           Ny  = sNy*nSy*nPy,
-     &           Nr  =  70)
+C     make sure to change Nr depending on satellite!!!
+     &           Nr  =  86)
 
 C     MAX_OLX :: Set to the maximum overlap region size of any array
 C     MAX_OLY    that will be exchanged. Controls the sizing of exch

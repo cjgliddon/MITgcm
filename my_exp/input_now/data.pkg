@@ -3,5 +3,6 @@
  useDiagnostics=.TRUE.,
  useMNC=.FALSE.,
  useSHELFICE=.TRUE.,
+ useSEAFRZ=.TRUE.,
  &
   

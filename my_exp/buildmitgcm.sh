@@ -19,6 +19,7 @@ export CASENAME=$1
 export RESOL=$2 # can be znncs(32,96,501) or znntwod(96,960) or znnx2y96...
 export NCORES=$3
 export TODO=$4
+export CODEDIR=$5 	# where are your code modifications?
 export NCPUS=$NCORES
 export NCPU_PERNODE=32
 export NNODES=$(((NCORES-1) / NCPU_PERNODE+1))
@@ -54,11 +55,11 @@ fi
 if [[ $TODO == *"compile"* ]]; then
     mkdir $CASENAME
     cd $CASENAME
-    #cp $sizefile ../code_now/SIZE.h
-    cp ../code_now/SIZE.h $sizefile
-    sed -i "s/_NR_/$NZ/g" ../code_now/SIZE.h
-    sed -i "s/_NX_/$NX/g" ../code_now/SIZE.h
-    cp -r ../code_now ./code
+    #cp $sizefile ../${CODEDIR}/SIZE.h
+    cp ../${CODEDIR}/SIZE.h $sizefile
+    sed -i "s/_NR_/$NZ/g" ../${CODEDIR}/SIZE.h
+    sed -i "s/_NX_/$NX/g" ../${CODEDIR}/SIZE.h
+    cp -r ../${CODEDIR} ./code
     cp -r ../input_now ./input
     cp ${MyExp}/grids/grid${RESOLUTION}/* ./input/
     mv ../README .

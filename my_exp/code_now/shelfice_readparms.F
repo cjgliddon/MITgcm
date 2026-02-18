@@ -187,7 +187,8 @@ C wykang
       HtP5=0.0
       HtP6=0.0
       tiltheat=0.0
-      Htide0 = 0.0289
+C      Htide0 = 0.0289
+      Htide0 = 0.0
       obliquity=27.0
       meridionalTs=0
       tide2d=.FALSE.
