@@ -1,0 +1,14 @@
+%%
+%%
+
+Package ``SEAFRZ'' is a template for implementing a new package.
+It shows how, ideally, the package should interact with the
+MITgcm kernel on various levels (initialisation, time-stepping,
+post-processing).
+
+This package has been modified from the MITgcm ``MYPACKAGE'' template.
+The only components of the template which are relevant here are the header
+files, the initialization routines for variables and diagnostics, and the
+namelist-reading routine. Additionally, the package includes subroutines:
+i)  to calculate thermodynamic and salt forcings at the lower boundary, and
+ii) to implement a new Equation of State for high-pressure saltwater.

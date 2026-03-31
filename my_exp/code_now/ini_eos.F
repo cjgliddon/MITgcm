@@ -28,6 +28,10 @@ C     == Global variables ==
 #include "PARAMS.h"
 #include "EOS.h"
 
+#ifdef ALLOW_SEAFRZ
+#include "SEAFRZ.h"
+#endif 
+
 C     !INPUT/OUTPUT PARAMETERS:
 C     == Routine arguments ==
 C     myThid -  Number of this instance of INI_CORI
@@ -40,9 +44,9 @@ C     !FUNCTIONS
 C     !LOCAL VARIABLES:
 C     == Local variables ==
 C     i,k    :: Loop counters
-      INTEGER  i, k, iLen, IERR
+      INTEGER  i, k, iLen
+      INTEGER  iUnit
       CHARACTER*(MAX_LEN_MBUF) msgBuf
-      _RL datum
 
       IF ( .NOT.fluidIsWater ) RETURN
 
@@ -357,19 +361,90 @@ C     5. secant bulk modulus K of sea water at p
        TPD01 =  3.830289486850898 _d -3
        TPD02 =  1.247811760368034 _d -6
 
-      ELSEIF( equationOfState .EQ. 'IDEALG' ) THEN
-      
-C     2025-07-01: addition by Coleman Gliddon
-C     Coefficients from SeaFreeze equation of state are stored in
-C     sfz_coeffs.dat, a binary file
+#ifdef ALLOW_SEAFRZ       
+      ELSEIF( equationOfState .EQ. 'SEAFRZ' ) THEN
+       iUnit=100
+C       OPEN(Unit=iUnit, FILE=sfz_EOSFile, STATUS='OLD',
+C     &      FORM='unformatted', ACCESS='sequential')
+C       READ(iUnit) sfz_EOSnorm_w, sfz_EOScoef_w
+C       CLOSE(iUnit)
+C       print *, "Read in coefficients successfully"
+C       print *, sfz_EOSnorm_w
+       sfz_EOSnorm_w(1)  = 5.0 _d 8
+       sfz_EOSnorm_w(2)  = 5.0 _d 8
+       sfz_EOSnorm_w(3)  = 3.0 _d 2
+       sfz_EOSnorm_w(4)  = 5.0 _d 1
+       sfz_EOSnorm_w(5)  = 5.0 _d 1
+       sfz_EOSnorm_w(6)  = 5.0 _d 1
 
-      ELSEIF( equationOfState .EQ. 'SEAFRZ') THEN
-         OPEN(38,FILE='/home/cgliddon/MITgcm/sfz_G_coeffs.dat',
-     &                   FORM='UNFORMATTED',
-     &                   ACCESS='STREAM',STATUS='OLD')
-                 
-         READ(38) sfz_coeffs
-         CLOSE(38)
+       sfz_EOScoef_w(0,0,0) =  4.392895491298365 _d 5
+       sfz_EOScoef_w(0,0,1) = -1.372565272054359 _d 4
+       sfz_EOScoef_w(0,0,2) =  3.318585792591782 _d 3
+       sfz_EOScoef_w(0,0,3) = -1.232993283475388 _d 3
+       sfz_EOScoef_w(0,1,0) = -1.528168440504197 _d 4
+       sfz_EOScoef_w(0,1,1) = -3.605787183730868 _d 3
+       sfz_EOScoef_w(0,1,2) =  7.639157416092785 _d 2
+       sfz_EOScoef_w(0,1,3) = -4.422114727415028 _d 2
+       sfz_EOScoef_w(0,2,0) = -1.522398907408374 _d 4
+       sfz_EOScoef_w(0,2,1) =  3.669074269871708 _d 2
+       sfz_EOScoef_w(0,2,2) = -1.320465001792982 _d 2
+       sfz_EOScoef_w(0,2,3) =  1.124184760941894 _d 2
+       sfz_EOScoef_w(0,3,0) =  8.459012038453147 _d 2
+       sfz_EOScoef_w(0,3,1) = -3.069554558002937 _d 1
+       sfz_EOScoef_w(0,3,2) =  4.764417706541280 _d 0
+       sfz_EOScoef_w(0,3,3) =  3.342817022401050 _d 0
+       sfz_EOScoef_w(1,0,0) =  4.249599757592665 _d 5
+       sfz_EOScoef_w(1,0,1) = -9.886702597961230 _d 3
+       sfz_EOScoef_w(1,0,2) =  3.877616205805898 _d 2
+       sfz_EOScoef_w(1,0,3) =  1.500602967013888 _d 2
+       sfz_EOScoef_w(1,1,0) =  9.325572254132434 _d 3
+       sfz_EOScoef_w(1,1,1) = -2.083565653163241 _d 2
+       sfz_EOScoef_w(1,1,2) =  1.788050064824029 _d 2
+       sfz_EOScoef_w(1,1,3) = -2.621869735112396 _d 2
+       sfz_EOScoef_w(1,2,0) =  6.332248430314939 _d 1
+       sfz_EOScoef_w(1,2,1) =  1.964197447225843 _d 1
+       sfz_EOScoef_w(1,2,2) = -7.270295001627528 _d 1
+       sfz_EOScoef_w(1,2,3) =  5.199179124771217 _d 1
+       sfz_EOScoef_w(1,3,0) =  9.355575176121511 _d 1
+       sfz_EOScoef_w(1,3,1) = -1.253083021424809 _d 2
+       sfz_EOScoef_w(1,3,2) =  4.763592506084933 _d 0
+       sfz_EOScoef_w(1,3,3) =  5.470853198926488 _d 1
+       sfz_EOScoef_w(2,0,0) = -2.061917922489945 _d 4
+       sfz_EOScoef_w(2,0,1) =  1.487101837027947 _d 3
+       sfz_EOScoef_w(2,0,2) = -1.358249012922679 _d 2
+       sfz_EOScoef_w(2,0,3) =  2.538344292645161 _d 1
+       sfz_EOScoef_w(2,1,0) = -2.237607320885072 _d 2
+       sfz_EOScoef_w(2,1,1) = -2.969477606911923 _d 2
+       sfz_EOScoef_w(2,1,2) =  6.468551198098930 _d 1
+       sfz_EOScoef_w(2,1,3) =  1.598480971794197 _d 1
+       sfz_EOScoef_w(2,2,0) = -5.681637277326190 _d 2
+       sfz_EOScoef_w(2,2,1) =  3.114134522733111 _d 2
+       sfz_EOScoef_w(2,2,2) = -4.181680709695866 _d 1
+       sfz_EOScoef_w(2,2,3) = -6.777013819218587 _d 1
+       sfz_EOScoef_w(2,3,0) = -1.013775702113708 _d 1
+       sfz_EOScoef_w(2,3,1) = -5.997809839069578 _d 1
+       sfz_EOScoef_w(2,3,2) =  2.461641102394424 _d 1
+       sfz_EOScoef_w(2,3,3) =  1.331866338030250 _d 1
+       sfz_EOScoef_w(3,0,0) =  4.767414364154305 _d 3
+       sfz_EOScoef_w(3,0,1) = -5.032428799375830 _d 2
+       sfz_EOScoef_w(3,0,2) =  7.731156959095824 _d 1
+       sfz_EOScoef_w(3,0,3) = -5.359035111418598 _d 1
+       sfz_EOScoef_w(3,1,0) = -3.569365567912391 _d 2
+       sfz_EOScoef_w(3,1,1) =  7.338480386318588 _d 1
+       sfz_EOScoef_w(3,1,2) = -1.702445242170961 _d 1
+       sfz_EOScoef_w(3,1,3) =  7.786715622170595 _d 1
+       sfz_EOScoef_w(3,2,0) =  5.397993649002092 _d 2
+       sfz_EOScoef_w(3,2,1) = -1.986940374995456 _d 2
+       sfz_EOScoef_w(3,2,2) =  2.598210248326723 _d 1
+       sfz_EOScoef_w(3,2,3) = -9.858772951367428 _d 0
+       sfz_EOScoef_w(3,3,0) = -8.220006992985100 _d 1
+       sfz_EOScoef_w(3,3,1) =  1.176783838440660 _d 2
+       sfz_EOScoef_w(3,3,2) = -2.319695563205187 _d 1
+       sfz_EOScoef_w(3,3,3) = -2.868881358059389 _d 1
+#endif /* ALLOW_SEAFRZ */
+              
+      ELSEIF( equationOfState .EQ. 'IDEALG' ) THEN
+
       ELSE
 
          WRITE(msgBuf,'(3A)') 'INI_EOS: eosType= "',

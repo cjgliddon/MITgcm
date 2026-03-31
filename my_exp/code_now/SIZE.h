@@ -53,7 +53,8 @@ CEOP
      &           Nx  = sNx*nSx*nPx,
      &           Ny  = sNy*nSy*nPy,
 C     make sure to change Nr depending on satellite!!!
-     &           Nr  =  86)
+C     Ganymede: 86; Callisto: 82, "balanced": 91
+     &           Nr  =  91)
 
 C     MAX_OLX :: Set to the maximum overlap region size of any array
 C     MAX_OLY    that will be exchanged. Controls the sizing of exch

@@ -69,7 +69,6 @@ C     == Local variables ==
       _RL bulkMod(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
       _RL rhoNum (1-OLx:sNx+OLx,1-OLy:sNy+OLy)
       _RL rhoDen (1-OLx:sNx+OLx,1-OLy:sNy+OLy)
-      _RL rhoSFZ (1-OLx:sNx+OLx,1-OLy:sNy+OLy)
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 CEOP
 
@@ -237,31 +236,19 @@ c#endif /* ALLOW_AUTODIFF_TAMC */
           ENDDO
          ENDDO
 
-C     Addition 2025-07-01:
-C     Use equation of state 'SEAFRZ' (SeaFreeze)
-
       ELSEIF( equationOfState .EQ. 'SEAFRZ' ) THEN
-
+         dp0 = surf_pRef - eosRefP0
          CALL PRESSURE_FOR_EOS(
      I             bi, bj, iMin, iMax, jMin, jMax, kRef, dp0,
      O             locPres,
      I             myThid )
-        
-C         PRINT *, 'Local (absolute) pressure, in Pa:' 
-C         PRINT *, locPres
 
-         CALL FIND_RHOSFZ(
+         CALL FIND_RHO_SFZ_2D(
      I             iMin, iMax, jMin, jMax,
      I             locPres, tFld, sFld,
-     O             rhoSFZ,
-     I             myThid )
-
-         DO j=jMin,jMax
-          DO i=iMin,iMax
-            rhoLoc(i,j) = rhoSFZ(i,j) - rhoConst
-          ENDDO
-         ENDDO  
-  
+     O             rhoLoc,
+     I             myThid)
+C       TODO: check if rhoLoc is anomaly or absolute
 
       ELSEIF( equationOfState .EQ. 'IDEALG' ) THEN
 
@@ -856,74 +843,6 @@ C     this line makes TAF create vectorizable code
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C     !ROUTINE: FIND_RHOSFZ
-C     !INTERFACE:
-      SUBROUTINE FIND_RHOSFZ(
-     I                iMin, iMax, jMin, jMax,
-     I                locPres, tFld, sFld,
-     O                rhoSF,
-     I                myThid )
-
-C     !DESCRIPTION: \bv
-C     *==========================================================*
-C     | o SUBROUTINE FIND_RHOSFZ
-C     |   Calculates the density using the SeaFreeze equation of
-C     |   state using the routines in pkg/sf_thermo/
-C     |   sf_seawater_mod.F90
-C     *==========================================================*
-C     \ev
-
-C     !USES:
-      USE sfz_seawater_mod
-      IMPLICIT NONE
-C     == Global variables ==
-#include "SIZE.h"
-#include "EEPARAMS.h"
-#include "PARAMS.h"
-#include "EOS.h"
-
-C     !INPUT/OUTPUT PARAMETERS:
-C     == Routine arguments ==
-      INTEGER iMin,iMax,jMin,jMax
-      _RL locPres(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
-      _RL tFld   (1-OLx:sNx+OLx,1-OLy:sNy+OLy)
-      _RL sFld   (1-OLx:sNx+OLx,1-OLy:sNy+OLy)
-      _RL rhoSF  (1-OLx:sNx+OLx,1-OLy:sNy+OLy)
-      INTEGER myThid
-
-C     !LOCAL VARIABLES:
-C     == Local variables ==
-      INTEGER i,j
-      _RL ct, sa, p, rho_loc
-      _RL den, epsln
-CEOP
-
-      DO j=jMin,jMax
-       DO i=iMin,iMax
-C     abbreviations
-        ct      = tFld(i,j)
-        sa      = sFld(i,j)
-
-        IF ( sa .LT. 0. _d 0 ) THEN
-         sa     = 0. _d 0
-        ENDIF 
-        
-        p       = locPres(i,j)
-        
-C        PRINT *, 'Pressure used in rho_sfz (Pa): ', p
-
-        CALL find_rhosfz_scalar(p, ct, sa, sfz_coeffs, rho_loc)
-        rhoSF(i,j) = rho_loc
-
-       ENDDO
-      ENDDO
-
-
-      RETURN
-      END
-
-C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-CBOP
 C     !ROUTINE: FIND_RHO_SCALAR
 C     !INTERFACE:
       SUBROUTINE FIND_RHO_SCALAR(
@@ -941,7 +860,6 @@ C     *==========================================================*
 C     \ev
 
 C     !USES:
-      USE sfz_seawater_mod
       IMPLICIT NONE
 C     == Global variables ==
 #include "SIZE.h"
@@ -1258,9 +1176,12 @@ C     density of sea water at pressure p
        rhoDen = 1.0/(epsln+den)
 
        rhoLoc = rhoNum*rhoDen
-
       ELSEIF( equationOfState .EQ. 'SEAFRZ' ) THEN
-         CALL find_rhosfz_scalar(pLoc, tLoc, sLoc, sfz_coeffs, rhoLoc)
+
+       ct = tLoc
+       sa = sLoc
+       p  = (pLoc + dp0)
+       CALL FIND_RHO_SFZ_SCALAR(ct,sa,p,rhoLoc)
 
       ELSEIF( equationOfState .EQ. 'IDEALG' ) THEN
 
