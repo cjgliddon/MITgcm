@@ -56,26 +56,26 @@ C      END IF
 C     rho and cp values taken from Seafreeze
 C     heats of fusion estimated using formulae in Dunaeva et al. (2010)
       IF ( sfz_flooriceType .eq. "III" ) THEN
-        sfz_FPcoef_l(3) =  2.4577 _d  2
-        sfz_FPcoef_l(1) =  3.3174 _d -2
-        sfz_FPcoef_l(2) = -2.7079 _d -1
+        sfz_FPcoef_l(1) =  3.4648 _d -2
+        sfz_FPcoef_l(2) = -6.1843 _d -1
+        sfz_FPcoef_l(3) =  2.4444 _d  2
 C     assume p = 300 MPa, T = 255 K
         rho_hpi  = 1.165 _d 3
         cp_hpi   = 1.843 _d 3
         Lfus_hpi = 4.541 _d 3 / MW_H2O
       ELSE IF ( sfz_flooriceType .eq. "V  ") THEN
-        sfz_FPcoef_l(3) =  2.4091 _d  2
-        sfz_FPcoef_l(1) =  5.5101 _d -2
-        sfz_FPcoef_l(2) = -3.4015 _d -1
+        sfz_FPcoef_l(1) =  5.7906 _d -2
+        sfz_FPcoef_l(2) = -8.0362 _d -2
+        sfz_FPcoef_l(3) =  2.3781 _d  2
 C     assume p = 450 MPa, T = 265 K ;
 C     these are characteristic values for Callisto seafloor
         rho_hpi  = 1.252 _d 3
         cp_hpi   = 1.824 _d 3
         Lfus_hpi = 4.973 _d 3 / MW_H2O
       ELSE IF ( sfz_flooriceType .eq. "VI ") THEN
-        sfz_FPcoef_l(3) =  2.3398 _d  2
-        sfz_FPcoef_l(1) =  6.8995 _d -2
-        sfz_FPcoef_l(2) = -3.6907 _d -1
+        sfz_FPcoef_l(1) =  7.3012 _d -2
+        sfz_FPcoef_l(2) = -8.9250 _d -1
+        sfz_FPcoef_l(3) =  2.2884 _d  2
 C     assume p = 700 MPa, T = 280 K ;
 C     these are characteristic values for Ganymede seafloor
         rho_hpi  = 1.332 _d 3
@@ -95,16 +95,20 @@ C      ENDDO
 C     create bottom heat flux array
       IF ( sfz_addFloorice ) THEN      
 C     instantiate bottom forcing array
-       DO bj=myByLo(myThid), myByHi(myThid)
-        DO bi=myBxLo(myThid), myBxHi(myThid)
-         DO j = 1-OLy,sNy+OLy
-          DO i = 1-OLx,sNx+OLx
-           sfz_Qbot(i,j,bi,bj) = -rho_hpi*cp_hpi*kappaT_hpi*dTdzBot
+       IF (sfz_QbotType .EQ. 0) THEN
+        DO bj=myByLo(myThid), myByHi(myThid)
+         DO bi=myBxLo(myThid), myBxHi(myThid)
+          DO j = 1-OLy,sNy+OLy
+           DO i = 1-OLx,sNx+OLx
+            sfz_Qbot(i,j,bi,bj) = -rho_hpi*cp_hpi*kappaT_hpi*dTdzBot
+           ENDDO
           ENDDO
          ENDDO
         ENDDO
-       ENDDO
-      ENDIF
+       ENDIF
+      ELSE IF ((sfz_QbotType .EQ. 1) .AND. (sfz_QbotFile .NE. ' ')) THEN
+       CALL READ_FLD_XY_RL( sfz_QbotFile, ' ', sfz_Qbot, 0, myThid)
+      END IF
 
       RETURN
       END

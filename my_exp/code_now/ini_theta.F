@@ -69,7 +69,7 @@ C--   Initialise temperature field to the vertical reference profile
             theta(i,j,k,bi,bj) = theta(i,j,k,bi,bj) 
      &                         + noiseAmp*(RAND*2 - 1)
            ENDIF
-           PRINT *, "thetaRef at k=", k, tRef(k)
+C           PRINT *, "thetaRef at k=", k, tRef(k)
           ENDDO
          ENDDO
         ENDDO

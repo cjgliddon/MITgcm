@@ -27,8 +27,8 @@ C     routine.
       INTEGER myThid
 
 C     !FUNCTIONS
-      _RL SW_TEMP
-      EXTERNAL SW_TEMP
+      _RL SFZ_TEMP
+      EXTERNAL SFZ_TEMP
 
 
 C     !LOCAL VARIABLES:
@@ -48,7 +48,8 @@ C     kLB       :: grid cell location of lower boundary
       _RL  pLoc,sLoc,tLoc,rhoLoc
       _RL  ocQflxLB, ocSflxLB
       _RL  sBL, tBL
-      _RL  dbToMPa,PaTodb
+      _RL  dbToMPa,PaTodb,MPa2Pa
+      _RL  sfz_pRef
 C-    FP coefficient names for more readable code
       _RL  a1,a2,a3,a4,a5
 C-    dummy variables for solving the "three-equations" system
@@ -65,9 +66,11 @@ C     added just for debugging
 CEOP
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
-C     conversion factors
-      dbToMPa = 1.0 _d -2
-      PaTodb  = 1.0 _d -4
+C     conversion factors & EOS constants
+      dbToMPa  = 1.0 _d -2
+      PaTodb   = 1.0 _d -4
+      MPa2Pa   = 1.0 _d -6
+      sfz_pRef = 1.0 _d +5
 C     define FP coefficient names
       IF (sfz_fpParamType .eq. 'LINEAR') THEN
        a1 = sfz_FPcoef_l(1)
@@ -104,13 +107,13 @@ C     varying bottom topography
      &              * rhoLoc*PaTodb*dbToMPa
            sLoc = salt(i,j,kLB,bi,bj)
            thetaLoc = theta(i,j,kLB,bi,bj)
-           IF ( (pLoc > 1.0 _d 20) .OR. (sLoc > 1.0 _d 10)
+           IF ( (pLoc > 1.0 _d 17) .OR. (sLoc > 1.0 _d 10)
      &                  .OR.(thetaLoc > 1.0 _d 4) ) THEN
             print *, "pLoc, sLoc, thetaLoc", pLoc, sLoc, thetaLoc
             print *, "at point:", i, j, kLB, bi, bj
            END IF
-           tLoc = SW_TEMP(sLoc, theta(i,j,kLB,bi,bj),
-     &                    pLoc/dbToMPa, zeroRL) + 273.15
+           tLoc = SFZ_TEMP(sLoc, theta(i,j,kLB,bi,bj)+273.15,
+     &                    pLoc*MPa2Pa, sfz_pRef)
 C           PRINT *, "Theta: ", theta(i,j,kLB,bi,bj) + 273.15
 C           PRINT *, "T_abs: ", tLoc
 C           PRINT *, "Salin: ", sLoc

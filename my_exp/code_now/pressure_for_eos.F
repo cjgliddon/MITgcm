@@ -82,6 +82,8 @@ C----------
             locPres(i,j) = rhoConst*(
      &                   totPhiHyd(i,j,k,bi,bj)
      &                 + phiRef(2*k) ) + dpRef
+C            PRINT *, "Local pressure at i, j, k: "
+C            PRINT *, i, j, k, locPres(i, j)
           ENDDO
          ENDDO
 c      ELSEIF ( selectP_inEOS_Zc.EQ.1 ) THEN

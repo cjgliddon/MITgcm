@@ -163,16 +163,16 @@ C     == Routine arguments ==
       _RL rhoLoc (1-OLx:sNx+OLx,1-OLy:sNy+OLy)
       INTEGER myThid
 C     == Functions
-      _RL SW_TEMP
-      EXTERNAL SW_TEMP
+      _RL SFZ_TEMP
+      EXTERNAL SFZ_TEMP
 C     == Local variables ==
       INTEGER i,j
       _RL     ct, sa, p, tReal, rhoRecip
-      _RL     Patodb,PaToMPa,mwNaCl 
+      _RL     Patodb,PaToMPa,sfz_pRef 
 
       Patodb  = 1.0 _d -4
       PaToMPa = 1.0 _d -6
-      mwNaCl = 1.80153 _d -2
+      sfz_pRef= 1.0 _d +5
 
       DO j=jMin,jMax
        DO i=iMin,iMax
@@ -181,15 +181,16 @@ C       convert quantities to K, molal, MPa
 C       PRINT *, "Conservative temp: ", ct
         sa = sFld(i,j) 
         p  = locPres(i,j)
-        tReal = SW_TEMP(sa, ct, p*PaTodb, zeroRL)
+        tReal = SFZ_TEMP(sa, ct+273.15, p, sfz_pRef)
 C        PRINT *, "State:", ct,sa,p,tReal
         IF ((tReal > 4.0 _d 2) .OR. (tReal < -1.0 _d 2)) THEN
          PRINT *, "Warning: Temperature going out of range"
          PRINT *, "tReal, i, j, pres:"
          PRINT *, tReal, i, j, p
         ENDIF
-        CALL DEVALTC(p, tReal+273.15, sa, 1, 0, 0, rhoRecip)
+        CALL DEVALTC(p, tReal, sa, 1, 0, 0, rhoRecip)
         rhoLoc(i,j) = 1.0 _d 0 / rhoRecip
+C        PRINT *, "p,rho =",p,rhoLoc(i,j)
        END DO
       END DO
 
@@ -207,25 +208,26 @@ C     Arguments
       _RL ct, sa, p
       _RL rho
       
-      _RL SW_TEMP
-      EXTERNAL SW_TEMP
+      _RL SFZ_TEMP
+      EXTERNAL SFZ_TEMP
 
 C     Local variables
       _RL mwNaCl
       _RL PaTodb,PaToMPa
-      _RL tReal,rhoRecip
+      _RL tReal,rhoRecip,sfz_pRef
       
       PaTodb  = 1.0     _d -4
       PaToMPa = 1.0     _d -6
+      sfz_pRef = 1.0    _d +5
 C      dbToMPa = 1.0     _d -2
       mwNaCl  = 1.80153 _d -2
       
-      tReal = SW_TEMP(sa, ct, p*PaTodb, zeroRL)
-      PRINT *, "FIND_RHO_SFZ_SCALAR data (sa, ct, p, tReal, rho):"
-      PRINT *, sa, ct, p, tReal
-      CALL DEVALTC(p, tReal+273.15, sa, 1, 0, 0, rhoRecip)
+      tReal = SFZ_TEMP(sa, ct+273.15, p, sfz_pRef)
+C      PRINT *, "FIND_RHO_SFZ_SCALAR data (sa, ct, p, tReal, rho):"
+C      PRINT *, sa, ct, p, tReal
+      CALL DEVALTC(p, tReal, sa, 1, 0, 0, rhoRecip)
       rho = 1 _d 0 / rhoRecip
-      PRINT *, rho
+C      PRINT *, rho
 
       RETURN
 

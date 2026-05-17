@@ -37,6 +37,8 @@ C     specifies whether to calculate an initial temperature profile in-model
 
       INTEGER sfz_index1
       INTEGER sfz_index2
+C     Bottom heating type. 0: conductive only; 1: specified via input file
+      INTEGER sfz_QbotType	
       _RL sfz_param1
       _RL sfz_param2
 C     high-pressure ice parameters
@@ -59,6 +61,8 @@ C     type of ice at seafloor & type of parameterization used for f.p.
       CHARACTER*(MAX_LEN_FNAM) sfz_fpParamType
 C     filename for where the water coefficients are stored
       CHARACTER*(MAX_LEN_FNAM) sfz_EOSFile
+C     filename for bottom heating specification
+      CHARACTER*(MAX_LEN_FNAM) sfz_QbotFile
 
 C-    file names for initial conditions:
       CHARACTER*(MAX_LEN_FNAM) sfz_Scal1File
@@ -75,7 +79,9 @@ C-    file names for initial conditions:
      &       sfz_doSwitch1, sfz_doSwitch2,
      &	     sfz_simple, sfz_addFloorice,
      &       sfz_allowFloFrz, sfz_doAutoTIni
-      COMMON /SFZ_PARAMS_I/ sfz_index1, sfz_index2
+      COMMON /SFZ_PARAMS_I/
+     &	     sfz_index1, sfz_index2,
+     &       sfz_QbotType
       COMMON /SFZ_PARAMS_R/
      &	     sfz_param1, sfz_param2,
      &	     kappaT_hpi, gammaTo_hpi, gammaSo_hpi,
@@ -89,7 +95,7 @@ C	EOS parameters
      &       sfz_VelUFile,  sfz_VelVFile,
      &       sfz_Surf1File, sfz_Surf2File,
      &	     sfz_flooriceType, sfz_fpParamType,
-     &	     sfz_EOSFile     
+     &	     sfz_EOSFile, sfz_QbotFile     
 
 #ifdef SEAFRZ_3D_STATE
 C     SFZ 3-dim. fields
