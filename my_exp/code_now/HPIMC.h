@@ -38,6 +38,8 @@ C     rho_hpi           :: high-pressure ice density [kg/m^3]
 C     Lfus_hpi          :: high-pressure ice enthalpy of fusion [J/kg]
 C     gammaT_hpi        :: lower-boundary thermal diffusion coefficient [m/s]
 C     gammaS_hpi        :: lower-boundary salt diffusion coefficient [m/s]
+C     cp_hpi            :: heat capacity of high-pressure ice [J/kg]
+C                          (used only if hpimc_QbotType .eq. 0)
 C     kappaT_hpi        :: thermal conductivity of high-pressure ice [W/m/K]
 C                          (used only if hpimc_QbotType .eq. 0)
 C     dTdz_hpi          :: temperature gradient in high-pressure ice [K/m]
@@ -52,6 +54,8 @@ C     sfz_FPcoef_l      :: coeffs. for linear freezing point EoS
       _RL Lfus_hpi
       _RL gammaT_hpi
       _RL gammaS_hpi
+      _RL cp_hpi
+      _RL kappaT_hpi
       _RL dTdz_hpi
       _RL sfz_EOScoef_w(0:3,0:3,0:3)
       _RL sfz_EOSnorm_w(6)
@@ -81,7 +85,8 @@ C-----------------------------------------------------------------------
      &       hpimc_QbotType
       COMMON /HPIMC_PARAMS_R/
      &	 rho_hpi, Lfus_hpi,
-     &	 gammaT_hpi, gammaS_hpi, dTdz_hpi,
+     &	 gammaT_hpi, gammaS_hpi, 
+     &       cp_hpi, kappaT_hpi, dTdz_hpi,
      &	 sfz_EOScoef_w, sfz_EOSnorm_w,
      &	 sfz_FPcoef_l
       COMMON /HPIMC_PARAMS_C/

@@ -87,7 +87,7 @@ C     instantiate bottom forcing array
          DO bi=myBxLo(myThid), myBxHi(myThid)
           DO j = 1-OLy,sNy+OLy
            DO i = 1-OLx,sNx+OLx
-            hpimc_Qbot(i,j,bi,bj) = -rho_hpi*cp_hpi*kappaT_hpi*dTdzBot
+            hpimc_Qbot(i,j,bi,bj) = -rho_hpi*cp_hpi*kappaT_hpi*dTdz_hpi
            ENDDO
           ENDDO
          ENDDO
