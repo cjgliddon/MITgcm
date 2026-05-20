@@ -95,7 +95,7 @@ C     data.pkg namelists
      &          useRunClock,
      &          useEMBED_FILES,
      &          useMYPACKAGE,
-     &          useSEAFRZ
+     &          useHPIMC
 
       _BEGIN_MASTER(myThid)
 
@@ -161,7 +161,7 @@ c     useGAD          =.FALSE.
       useRunClock     =.FALSE.
       useEMBED_FILES  =.FALSE.
       useMYPACKAGE    =.FALSE.
-      useSEAFRZ       =.FALSE.
+      useHPIMC       =.FALSE.
 
 C-    Adjust default to account for pkgs without run-time On/Off switch
 #ifdef ALLOW_AUTODIFF
@@ -411,8 +411,8 @@ C----- pkgs with a standard "usePKG" On/Off switch in "data.pkg":
 #ifdef ALLOW_MYPACKAGE
       CALL PACKAGES_PRINT_MSG( useMYPACKAGE,  'MYPACKAGE',   ' ' )
 #endif
-#ifdef ALLOW_SEAFRZ
-      CALL PACKAGES_PRINT_MSG( useSEAFRZ,     'SEAFRZ',      ' ' )
+#ifdef ALLOW_HPIMC
+      CALL PACKAGES_PRINT_MSG( useHPIMC,     'HPIMC',      ' ' )
 #endif
 
 C----- pkgs without standard "usePKG" in "data.pkg":

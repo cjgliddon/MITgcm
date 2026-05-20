@@ -1,6 +1,6 @@
 #include "PACKAGES_CONFIG.h"
 #include "CPP_OPTIONS.h"
-#include "SEAFRZ_OPTIONS.h"
+#include "HPIMC_OPTIONS.h"
 
 C     TODO: clean up this file
 CBOP
@@ -16,7 +16,7 @@ C     === Global variables ===
 #include "EEPARAMS.h"
 #include "PARAMS.h"
 #include "EOS.h"
-#include "SEAFRZ.h"
+#include "HPIMC.h"
 
 C     !DESCRIPTION:
 C     Evaluate a partial derivative of the tricubic polynomial.
@@ -152,7 +152,7 @@ C     === Global variables ===
 #include "EEPARAMS.h"
 #include "PARAMS.h"
 #include "EOS.h"
-#include "SEAFRZ.h"
+#include "HPIMC.h"
 
 
 C     == Routine arguments ==

@@ -206,8 +206,8 @@ c# endif
 # endif
 #endif /* ALLOW_TAPENADE */
 
-# ifdef ALLOW_SEAFRZ
-#  include "SEAFRZ.h"
+# ifdef ALLOW_HPIMC
+#  include "HPIMC.h"
 # endif
 
 C     !INPUT/OUTPUT PARAMETERS:
@@ -525,12 +525,12 @@ C     shelf-ice ocean interface
       ENDIF
 #endif /* ALLOW_SHELFICE */
 
-#ifdef ALLOW_SEAFRZ
-      IF ( useSEAFRZ .AND. sfz_addFloorice .AND. fluidIsWater ) THEN
+#ifdef ALLOW_HPIMC
+      IF ( useHPIMC .AND. hpimc_addFloorice .AND. fluidIsWater ) THEN
        PRINT *, "Calling FLOORICE_THERMODYNAMICS at step", myIter
        CALL FLOORICE_THERMODYNAMICS( myTime, myIter, myThid )
       ENDIF
-#endif /* ALLOW_SEAFRZ
+#endif /* ALLOW_HPIMC
 
 #ifdef ALLOW_ICEFRONT
       IF ( useICEFRONT .AND. fluidIsWater ) THEN

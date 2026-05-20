@@ -550,11 +550,11 @@ C--   Initialise the 2-Way Nesting packages variables
       ENDIF
 #endif /* ALLOW_MYPACKAGE */
 
-#ifdef ALLOW_SEAFRZ
-      IF ( useSEAFRZ ) THEN
-        CALL SEAFRZ_INIT_VARIA( myThid )
+#ifdef ALLOW_HPIMC
+      IF ( useHPIMC ) THEN
+        CALL HPIMC_INIT_VARIA( myThid )
       ENDIF
-#endif /* ALLOW_SEAFRZ */
+#endif /* ALLOW_HPIMC */
 
 
 

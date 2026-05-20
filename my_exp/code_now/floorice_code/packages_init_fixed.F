@@ -454,10 +454,10 @@ C--   Initialise fixed array for Float pkg
 #endif /* ALLOW_SHELFICE */
 
 C     Additions for icy ocean world floor ice modeling (CJG)
-C #ifdef ALLOW_SEAFRZ
+C #ifdef ALLOW_HPIMC
 C      IF ( useSeaFrz )
         CALL FLOORICE_INIT_FIXED( myThid )
-C #endif /* ALLOW_SEAFRZ */
+C #endif /* ALLOW_HPIMC */
 
 #ifdef ALLOW_STEEP_ICECAVITY
       IF (useSTIC) THEN

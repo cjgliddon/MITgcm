@@ -1,4 +1,4 @@
-#include "SEAFRZ_OPTIONS.h"
+#include "HPIMC_OPTIONS.h"
 
 CBOP
 C
@@ -15,7 +15,7 @@ C     === Global variables ===
 #include "PARAMS.h"
 #include "GRID.h"
 #include "DYNVARS.h"
-#include "SEAFRZ.h"
+#include "HPIMC.h"
 C     !INPUT/OUTPUT PARAMETERS:
 C     === Routine arguments ===
 C     myIter :: iteration counter for this thread

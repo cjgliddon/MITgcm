@@ -127,7 +127,7 @@ C     drKp1, recip_drLoc
 C     CJG: dummy variable for in-situ temp
       _RL tInSituLoc
 
-#ifdef ALLOW_SEAFRZ
+#ifdef ALLOW_HPIMC
       _RL deltaT_surf
       _RL SFZ_PTMP
       EXTERNAL SFZ_PTMP
@@ -135,7 +135,7 @@ C     CJG: dummy variable for in-situ temp
       EXTERNAL SFZ_TEMP
       PARAMETER sfz_pRef = 1.0 _d 05
       PARAMETER db2Pa = 1.0 _d 04
-#endif /* ALLOW_SEAFRZ */
+#endif /* ALLOW_HPIMC */
 
 #ifdef ALLOW_GENTIM2D_CONTROL
       INTEGER iarr
@@ -230,13 +230,13 @@ C     where this value is part of the protocol
 #endif /* ALLOW_ISOMIP_TD */
 C     if we have the SEAFRZ EOS, we need a different FP parameterization
 C     for self-consistency with the other EOS params
-#ifdef ALLOW_SEAFRZ
+#ifdef ALLOW_HPIMC
       IF ( eosType .EQ. 'SEAFRZ' ) THEN
        a0 = -6.34807 _d -2
        b  = -1.02283 _d -3
        c0 =  1.06590 _d 0
       ENDIF
-#endif /* ALLOW_SEAFRZ */
+#endif /* ALLOW_HPIMC */
 
       DO bj = myByLo(myThid), myByHi(myThid)
        DO bi = myBxLo(myThid), myBxHi(myThid)
@@ -623,7 +623,7 @@ C     (Holland and Jenkins, 1999, eq.21)
             tInSituLoc = tLoc(I,J)
 C            PRINT *, "local temperature", tInSituLoc
 C     make correction for SeaFreeze EOS
-C#ifdef ALLOW_SEAFRZ
+C#ifdef ALLOW_HPIMC
 C            IF (eosType .eq. "SEAFRZ") THEN
 C             thetaFreeze = SFZ_PTMP(sLoc(I,J) ,thetaFreeze+273.15,
 C     &                          pLoc(I,J)*db2Pa, sfz_pRef) - 273.15
@@ -632,7 +632,7 @@ C            PRINT *, I,J,sLoc(I,J), pLoc(I,J), thetaFreeze
 C             tInSituLoc = SFZ_TEMP(sLoc(I,J), tLoc(I,J)+273.15,
 C     &                          pLoc(I,J)*db2Pa, sfz_pRef) - 273.15
 C            ENDIF
-C#endif /* ALLOW_SEAFRZ */
+C#endif /* ALLOW_HPIMC */
 
 C wykang: calculate heat conduction rate using log formula if
 C SHELFICEkappa < 0

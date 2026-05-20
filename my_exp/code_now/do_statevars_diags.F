@@ -115,11 +115,11 @@ C                    and stagger/synchronous TimeStep
        ENDIF
 #endif /* ALLOW_LAND */
 
-#ifdef ALLOW_SEAFRZ
-       IF (seqFlag.EQ.0 .AND. useSEAFRZ ) THEN
-         CALL SEAFRZ_DIAGNOSTICS_STATE( myTime, myIter, myThid)
+#ifdef ALLOW_HPIMC
+       IF (seqFlag.EQ.0 .AND. useHPIMC ) THEN
+         CALL HPIMC_DIAGNOSTICS_STATE( myTime, myIter, myThid)
        ENDIF
-#endif /* ALLOW_SEAFRZ */
+#endif /* ALLOW_HPIMC */
 
 #ifdef ALLOW_MYPACKAGE
        IF ( seqFlag.EQ.0 .AND. useMYPACKAGE ) THEN

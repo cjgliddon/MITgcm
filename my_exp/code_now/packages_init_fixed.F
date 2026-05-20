@@ -640,12 +640,12 @@ C--   needs to be called after the OASIS_INIT
       ENDIF
 #endif
 
-#ifdef ALLOW_SEAFRZ
-      IF (useSEAFRZ) THEN
+#ifdef ALLOW_HPIMC
+      IF (useHPIMC) THEN
 # ifdef ALLOW_DEBUG
-        IF (debugMode) CALL DEBUG_CALL('SEAFRZ_INIT_FIXED',myThid)
+        IF (debugMode) CALL DEBUG_CALL('HPIMC_INIT_FIXED',myThid)
 # endif
-        CALL SEAFRZ_INIT_FIXED(myThid)
+        CALL HPIMC_INIT_FIXED(myThid)
       ENDIF
 #endif
 

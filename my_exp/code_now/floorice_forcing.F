@@ -1,4 +1,4 @@
-#include "SEAFRZ_OPTIONS.h"
+#include "HPIMC_OPTIONS.h"
 
 C     *=============================================================*
 CBOP
@@ -13,7 +13,7 @@ C     !Global variables:
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "GRID.h"
-#include "SEAFRZ.h"
+#include "HPIMC.h"
 
 C
 C     !Input/output variables:
@@ -64,7 +64,7 @@ C     !Global variables:
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "GRID.h"
-#include "SEAFRZ.h"
+#include "HPIMC.h"
 
 C     !Input/output variables:
       INTEGER myIter, myThid
