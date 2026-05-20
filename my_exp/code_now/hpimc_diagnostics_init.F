@@ -41,7 +41,7 @@ C     diagTitle :: local string (80c): description of field in diagnostic
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
-
+      IF ( useDiagnostics) THEN
         diagName  = 'HpiLQflx'
         diagTitle = 'Lower boundary heat flux'
         diagUnits = 'J m^-2 s^-1     '

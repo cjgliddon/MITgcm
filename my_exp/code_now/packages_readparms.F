@@ -417,8 +417,8 @@ C--   if useMYPACKAGE=T, set mypackage parameters; otherwise just return
 #endif
 
 #ifdef ALLOW_HPIMC
-C--   if useHPIMC=T, set mypackage parameters; otherwise just return
-      CALL SEAFRZ_READPARMS( myThid )
+C--   if useHPIMC=T, set HPIMC parameters; otherwise just return
+      CALL HPIMC_READPARMS( myThid )
 #endif
 
      

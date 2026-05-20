@@ -33,7 +33,7 @@ CEOP
          drLoc = drF(kLev)*(1. _d 0 - _hFacC(i,j,kLev,bi,bj))
          drLoc = MIN(drLoc, drF(Km1) * _hFacC(i,j,Km1,bi,bj))
          drLoc = MAX(drLoc, 0. _d 0)
-         gTLoc = sfz_flooriceForcingT(i,j,bi,bj)/
+         gTLoc = hpimc_flooriceForcingT(i,j,bi,bj)/
      &            ( drF(kLev)*_hFacC(i,j,kLev,bi,bj) + drLoc )
          gT_arr(i,j) = gT_arr(i,j) + gTLoc
         else if (kLev<Nr .AND. kLev+1 == kLowC(i,j,bi,bj)) then
@@ -41,7 +41,7 @@ CEOP
          drLoc = drF(Kp1)*( 1. _d 0 - _hFacC(i, j, Kp1, bi, bj) )
          drLoc = MIN(drLoc, drF(kLev) * _hFacC(i,j,kLev,bi,bj) )
          drLoc = MAX( drLoc, 0. _d 0)
-         gTloc = sfz_flooriceForcingT(i,j,bi,bj)/
+         gTloc = hpimc_flooriceForcingT(i,j,bi,bj)/
      &            ( drF(Kp1)*_hFacC(i,j,Kp1,bi,bj) + drLoc )
          gT_arr(i,j) = gT_arr(i,j) + gTloc*drLoc*recip_drF(kLev)* 
      &            _recip_hFacC(i,j,kLev,bi,bj)
@@ -83,7 +83,7 @@ CEOP
          drLoc = drF(kLev)*(1. _d 0 - _hFacC(i,j,kLev,bi,bj))
          drLoc = MIN(drLoc, drF(Km1) * _hFacC(i,j,Km1,bi,bj))
          drLoc = MAX(drLoc, 0. _d 0)
-         gSLoc = sfz_flooriceForcingS(i,j,bi,bj)/
+         gSLoc = hpimc_flooriceForcingS(i,j,bi,bj)/
      &            ( drF(kLev)*_hFacC(i,j,kLev,bi,bj) + drLoc )
          gS_arr(i,j) = gS_arr(i,j) + gSLoc
         else if (kLev<Nr .AND. kLev+1 == kLowC(i,j,bi,bj)) then
@@ -91,7 +91,7 @@ CEOP
          drLoc = drF(Kp1)*( 1. _d 0 - _hFacC(i, j, Kp1, bi, bj) )
          drLoc = MIN(drLoc, drF(kLev) * _hFacC(i,j,kLev,bi,bj) )
          drLoc = MAX( drLoc, 0. _d 0)
-         gSloc = sfz_flooriceForcingS(i,j,bi,bj)/
+         gSloc = hpimc_flooriceForcingS(i,j,bi,bj)/
      &            ( drF(Kp1)*_hFacC(i,j,Kp1,bi,bj) + drLoc )
          gS_arr(i,j) = gS_arr(i,j) + gSloc*drLoc*recip_drF(kLev)* 
      &            _recip_hFacC(i,j,kLev,bi,bj)

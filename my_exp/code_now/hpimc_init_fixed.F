@@ -45,7 +45,7 @@ C     This updates an earlier version of the code where the Lfus values were
 C     estimated using formulas from Dunaeva et al. (2010); now Lfus is just
 C     the enthalpy difference between the ice phase and pure water at the
 C     specified P/T.
-      IF ( sfz_flooriceType .eq. "III" ) THEN
+      IF ( hpimc_flooriceType .eq. "III" ) THEN
         sfz_FPcoef_l(1) =  3.4648 _d -2
         sfz_FPcoef_l(2) = -6.1843 _d -1
         sfz_FPcoef_l(3) =  2.4444 _d  2
@@ -53,7 +53,7 @@ C     assume p = 300 MPa, T = 255 K
         rho_hpi  = 1.165 _d 3
         cp_hpi   = 1.843 _d 3
         Lfus_hpi = 2.656 _d 5
-      ELSE IF ( sfz_flooriceType .eq. "V  ") THEN
+      ELSE IF ( hpimc_flooriceType .eq. "V  ") THEN
         sfz_FPcoef_l(1) =  5.7906 _d -2
         sfz_FPcoef_l(2) = -8.0362 _d -2
         sfz_FPcoef_l(3) =  2.3781 _d  2
@@ -62,7 +62,7 @@ C     these are characteristic values for Callisto seafloor
         rho_hpi  = 1.252 _d 3
         cp_hpi   = 1.824 _d 3
         Lfus_hpi = 2.741 _d 5
-      ELSE IF ( sfz_flooriceType .eq. "VI ") THEN
+      ELSE IF ( hpimc_flooriceType .eq. "VI ") THEN
         sfz_FPcoef_l(1) =  7.3012 _d -2
         sfz_FPcoef_l(2) = -8.9250 _d -1
         sfz_FPcoef_l(3) =  2.2884 _d  2

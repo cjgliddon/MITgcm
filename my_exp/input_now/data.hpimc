@@ -1,0 +1,9 @@
+# =================================
+# | Parameters for HPIMC package |
+# =================================
+
+&HPIMC_PARM01
+dTdz_hpi=-1.0e-4,
+hpimc_flooriceType='V',
+hpimc_QbotType=0,
+&

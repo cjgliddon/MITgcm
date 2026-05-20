@@ -415,6 +415,7 @@ C     == Global data ==
 #include "DYNVARS.h"
 #include "FFIELDS.h"
 #include "SURFACE.h"
+#include "HPIMC.h"
 
 C     !INPUT/OUTPUT PARAMETERS:
 C     gT_arr    :: the tendency array
@@ -731,7 +732,7 @@ c     ENDIF
 
 C     Additions for icy ocean world floor ice modeling (CJG)
 #ifdef ALLOW_HPIMC
-      IF ( useHPIMC ) THEN
+      IF ( useHPIMC .AND. hpimc_addFloorice ) THEN
             CALL FLOORICE_FORCING_T(
      U                   gT_arr,
      I                   iMin,iMax,jMin,jMax, k, bi,bj,
@@ -821,6 +822,7 @@ C     == Global data ==
 #include "DYNVARS.h"
 #include "FFIELDS.h"
 #include "SURFACE.h"
+#include "HPIMC.h"
 
 C     !INPUT/OUTPUT PARAMETERS:
 C     gS_arr    :: the tendency array
@@ -973,7 +975,7 @@ C     Ocean: Add salinity surface forcing (e.g., fresh-water) in surface level
 
 C     Additions for icy ocean world floor ice modeling (CJG)
 #ifdef ALLOW_HPIMC
-      IF ( useSeaFrz ) THEN
+      IF ( useHPIMC .AND. hpimc_addFloorice ) THEN
             CALL FLOORICE_FORCING_S(
      U                   gS_arr,
      I                   iMin,iMax,jMin,jMax, k, bi,bj,

@@ -72,48 +72,46 @@ C     conversion factors & EOS constants
       MPa2Pa   = 1.0 _d -6
       sfz_pRef = 1.0 _d +5
 C     define FP coefficient names
-      IF (sfz_fpParamType .eq. 'LINEAR') THEN
-       a1 = sfz_FPcoef_l(1)
-       a2 = sfz_FPcoef_l(2)
-       a3 = sfz_FPcoef_l(3)
-      ENDIF
+
+      a1 = sfz_FPcoef_l(1)
+      a2 = sfz_FPcoef_l(2)
+      a3 = sfz_FPcoef_l(3)
+
 
 C     flag for debugging
       checkBalances = .FALSE.
 
 
-
-      IF ( sfz_addFloorice ) THEN      
-
-      DO bj = myByLo(myThid), myByHi(myThid)
-       DO bi = myBxLo(myThid), myBxHi(myThid)
-        DO j = 1-OLy,sNy+OLy
-         DO i = 1-OLx,sNx+OLx
+      IF ( hpimc_addFloorice ) THEN      
+       DO bj = myByLo(myThid), myByHi(myThid)
+        DO bi = myBxLo(myThid), myBxHi(myThid)
+         DO j = 1-OLy,sNy+OLy
+          DO i = 1-OLx,sNx+OLx
 C     Initialize forcing arrays with zeros
-          sfz_flooriceForcingT(i,j,bi,bj) = 0. _d 0
-          sfz_flooriceForcingS(i,j,bi,bj) = 0. _d 0 
+           hpimc_flooriceForcingT(i,j,bi,bj) = 0. _d 0
+           hpimc_flooriceForcingS(i,j,bi,bj) = 0. _d 0 
 C     Find grid cell where boundary layer is located
 C     For now, we use the lowest "wet cell" for a given column
-          kLB = kLowC(i,j,bi,bj) 
+           kLB = kLowC(i,j,bi,bj) 
 C     Find local values of thermodynamic variables (p,T,S,rho)
 C     rho & p approximated as reference values at k-level
-          IF ((kLB > 0) .AND. (kLB <= Nr)) THEN
-           rhoLoc = rhoRef(kLB)
+           IF ((kLB > 0) .AND. (kLB <= Nr)) THEN
+            rhoLoc = rhoRef(kLB)
 C     the next few lines calculate a pressure adjustment due to
 C     varying bottom topography
-           pLoc = (phiRef(2*kLB-1) 
-     &               + gravity*gravFacC(kLB)*drF(kLB)
-     &               * hFacC(i,j,kLB,bi,bj))
-     &              * rhoLoc*PaTodb*dbToMPa
-           sLoc = salt(i,j,kLB,bi,bj)
-           thetaLoc = theta(i,j,kLB,bi,bj)
-           IF ( (pLoc > 1.0 _d 17) .OR. (sLoc > 1.0 _d 10)
+            pLoc = (phiRef(2*kLB-1) 
+     &                + gravity*gravFacC(kLB)*drF(kLB)
+     &                * hFacC(i,j,kLB,bi,bj))
+     &                * rhoLoc*PaTodb*dbToMPa
+            sLoc = salt(i,j,kLB,bi,bj)
+            thetaLoc = theta(i,j,kLB,bi,bj)
+            IF ( (pLoc > 1.0 _d 17) .OR. (sLoc > 1.0 _d 10)
      &                  .OR.(thetaLoc > 1.0 _d 4) ) THEN
-            print *, "pLoc, sLoc, thetaLoc", pLoc, sLoc, thetaLoc
-            print *, "at point:", i, j, kLB, bi, bj
-           END IF
-           tLoc = SFZ_TEMP(sLoc, theta(i,j,kLB,bi,bj)+273.15,
-     &                    pLoc*MPa2Pa, sfz_pRef)
+             print *, "pLoc, sLoc, thetaLoc", pLoc, sLoc, thetaLoc
+             print *, "at point:", i, j, kLB, bi, bj
+            END IF
+            tLoc = SFZ_TEMP(sLoc, theta(i,j,kLB,bi,bj)+273.15,
+     &                     pLoc*MPa2Pa, sfz_pRef)
 C           PRINT *, "Theta: ", theta(i,j,kLB,bi,bj) + 273.15
 C           PRINT *, "T_abs: ", tLoc
 C           PRINT *, "Salin: ", sLoc
@@ -123,36 +121,34 @@ C           PRINT *, tLoc, "Kelvin"
 C           PRINT *, "Local theta: ", theta(i,j,kLB,bi,bj)
 C           PRINT *, "sLoc: ", sLoc
 C           PRINT *, "pLoc (MPa): ", pLoc
-           IF (sfz_allowFloFrz) THEN
-C          three-equations system
-            IF (sfz_fpParamType .eq. 'LINEAR') THEN
-             e1 = sfz_Qbot(i,j,bi,bj)
-             e2 = rhoLoc*gammaTo_hpi*HeatCapacity_Cp
-             e3 = -rhoLoc*gammaSo_hpi*Lfus_hpi
-             e4 = e2*(tLoc-a1*pLoc-a3)
-             aqe = e2*a2
-             bqe = e3 - e1 - e4
-             cqe = -sLoc*e3
-             IF (aqe .NE. 0. _d 0) THEN
-C              sBL = (-1*bqe - SQRT(bqe*bqe -4*aqe*cqe))/(2*aqe)
-              sBL = -2*cqe/(bqe - SQRT(bqe*bqe - 4*aqe*cqe))
-             ELSE
-              sBL = -1*cqe/bqe
-             ENDIF
-             tBL = a1*pLoc + a2*sBL + a3
-             IF (sBL .NE. 0. _d 0) THEN
-              sigma = gammaSo_hpi*rhoLoc*(1 - sLoc/sBL)
-             ELSE
-              sigma = 0. _d 0
-             ENDIF
+
+C           three-equations system
+            e1 = hpimc_Qbot(i,j,bi,bj)
+            e2 = rhoLoc*gammaT_hpi*HeatCapacity_Cp
+            e3 = -rhoLoc*gammaS_hpi*Lfus_hpi
+            e4 = e2*(tLoc-a1*pLoc-a3)
+            aqe = e2*a2
+            bqe = e3 - e1 - e4
+            cqe = -sLoc*e3
+            IF (aqe .NE. 0. _d 0) THEN
+C             sBL = (-1*bqe - SQRT(bqe*bqe -4*aqe*cqe))/(2*aqe)
+             sBL = -2*cqe/(bqe - SQRT(bqe*bqe - 4*aqe*cqe))
+            ELSE
+             sBL = -1*cqe/bqe
             ENDIF
-            sfz_floorice_dmdt(i,j,bi,bj) = sigma
-            sfz_floorice_Sflx(i,j,bi,bj) = -sigma*sBL
-C            sfz_floorice_Qflx(i,j,bi,bj) = sigma
+            tBL = a1*pLoc + a2*sBL + a3
+            IF (sBL .NE. 0. _d 0) THEN
+             sigma = gammaS_hpi*rhoLoc*(1 - sLoc/sBL)
+            ELSE
+             sigma = 0. _d 0
+            ENDIF
+            hpimc_floorice_dmdt(i,j,bi,bj) = sigma
+            hpimc_floorice_Sflx(i,j,bi,bj) = -sigma*sBL
+C            hpimc_floorice_Qflx(i,j,bi,bj) = sigma
 C     &           * (HeatCapacity_Cp*(tLoc-tBL) - Lfus_hpi ) 
             ocSflxLB = sigma*sBL
             ocQflxLB = e2*(tBL-tLoc)
-            sfz_floorice_Qflx(i,j,bi,bj) = ocQflxLB
+            hpimc_floorice_Qflx(i,j,bi,bj) = ocQflxLB
             IF (checkBalances) THEN
              PRINT *, "Checking balances for floorice at:",i,j,bi,bj
              PRINT *, "Lfus, e1-e4, aqe,bqe,cqe,discriminant"
@@ -165,40 +161,39 @@ C     &           * (HeatCapacity_Cp*(tLoc-tBL) - Lfus_hpi )
              PRINT *, "Latent heating of BL: "
              PRINT *, Lfus_hpi*sigma
              PRINT *, "Diffusive salt flux:"
-             PRINT *, rhoLoc*gammaSo_hpi*(sLoc - sBL)
+             PRINT *, rhoLoc*gammaS_hpi*(sLoc - sBL)
              PRINT *, "Boundary layer state:"
              PRINT *, pLoc, tBL, sBL
              PRINT *, "Ocean state:"
              PRINT *, pLoc, sLoc, tLoc, rhoLoc
-            END IF 
-           ELSE
-            sfz_floorice_dmdt(i,j,bi,bj) = 0. _d 0
-            IF (sfz_fpParamType .eq. 'LINEAR') THEN
-             tBL = sfz_FPcoef_l(1) + sfz_FPcoef_l(2)*pLoc 
-     &           + sfz_FPcoef_l(3)*sLoc
+            ENDIF 
+C           ELSE
+C            hpimc_floorice_dmdt(i,j,bi,bj) = 0. _d 0
+C            IF (sfz_fpParamType .eq. 'LINEAR') THEN
+C             tBL = sfz_FPcoef_l(1) + sfz_FPcoef_l(2)*pLoc 
+C     &           + sfz_FPcoef_l(3)*sLoc
 C             PRINT *, "Boundary layer temperature: "
 C             PRINT *, tBL, "K"
-            ENDIF
+C            ENDIF
 C-      Heat flux into BL from ocean
-            ocQflxLB = gammaTo_hpi*rhoLoc*HeatCapacity_Cp*(tBL-tLoc)
-            sfz_floorice_Qflx(i,j,bi,bj) =
+C            ocQflxLB = gammaTo_hpi*rhoLoc*HeatCapacity_Cp*(tBL-tLoc)
+C            hpimc_floorice_Qflx(i,j,bi,bj) =
 C     &        - rho_hpi*cp_hpi*kappaT_hpi*dTdzBot
-     &        + ocQflxLB
-            ocSflxLB = 0. _d 0
-            sfz_floorice_Sflx(i,j,bi,bj) = 0. _d 0
-           ENDIF
-          
+C     &        + ocQflxLB
+C            ocSflxLB = 0. _d 0
+C            hpimc_floorice_Sflx(i,j,bi,bj) = 0. _d 0
+                    
 C     calculate per-unit-depth T and S forcings; will be converted
 C     to actual tendencies in the floorice_forcing routines
-           sfz_flooriceForcingT(i,j,bi,bj) =
+           hpimc_flooriceForcingT(i,j,bi,bj) =
      &                   ocQflxLB/(HeatCapacity_Cp*rhoLoc)
-           sfz_flooriceForcingS(i,j,bi,bj) =
+           hpimc_flooriceForcingS(i,j,bi,bj) =
      &                   ocSflxLB/(rhoLoc)
-          ENDIF
+           ENDIF
+          ENDDO
          ENDDO
         ENDDO
        ENDDO
-      ENDDO
       ENDIF
 
       END

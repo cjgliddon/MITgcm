@@ -106,22 +106,22 @@ C-      Assume Agrid position:
 #endif /* HPIMC_3D_STATE */
 
 #ifdef HPIMC_2D_STATE
-       IF ( hpimc_Surf1File .NE. ' ' ) THEN
-         CALL READ_FLD_XY_RL( hpimc_Surf1File,' ',
-     &                        hpimc_Surf1, 0, myThid )
-         CALL EXCH_XY_RL( hpimc_Surf1, myThid )
-       ENDIF
-       IF ( hpimc_Surf2File .NE. ' ' ) THEN
-         CALL READ_FLD_XY_RL( hpimc_Surf2File,' ',
-     &                        hpimc_Surf2, 0, myThid )
-         CALL EXCH_XY_RL( hpimc_Surf2, myThid )
-       ENDIF
+C       IF ( hpimc_Surf1File .NE. ' ' ) THEN
+C         CALL READ_FLD_XY_RL( hpimc_Surf1File,' ',
+C     &                        hpimc_Surf1, 0, myThid )
+C         CALL EXCH_XY_RL( hpimc_Surf1, myThid )
+C       ENDIF
+C       IF ( hpimc_Surf2File .NE. ' ' ) THEN
+C         CALL READ_FLD_XY_RL( hpimc_Surf2File,' ',
+C     &                        hpimc_Surf2, 0, myThid )
+C         CALL EXCH_XY_RL( hpimc_Surf2, myThid )
+C       ENDIF
 #endif /* HPIMC_2D_STATE */
 
       ELSE
 C--   restart from a pickup:
-         CALL HPIMC_READ_PICKUP( nIter0, myThid )
-
+C         CALL HPIMC_READ_PICKUP( nIter0, myThid )
+       PRINT *, "Warning: HPIMC_READ_PICKUP not defined, nothing done"
 C--   end start-from-iter-zero if/else block
       ENDIF
 
