@@ -93,7 +93,8 @@ C     instantiate bottom forcing array
          ENDDO
         ENDDO
        ENDIF
-      ELSE IF ((hpimc_QbotType .EQ. 1) .AND. (hpimc_QbotFile .NE. ' ')) THEN
+      ELSE IF ((hpimc_QbotType .EQ. 1) .AND. (hpimc_QbotFile .NE. ' '))
+     &    THEN
        CALL READ_FLD_XY_RL( hpimc_QbotFile, ' ', hpimc_Qbot, 0, myThid)
       END IF
 
