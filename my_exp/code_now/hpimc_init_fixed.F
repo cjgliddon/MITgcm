@@ -97,5 +97,15 @@ C     instantiate bottom forcing array
        CALL READ_FLD_XY_RL( hpimc_QbotFile, ' ', hpimc_Qbot, 0, myThid)
       END IF
 
+C     Read in boundary-layer temperature fields if we're prescribing them
+      IF (hpimc_prescribeTb) THEN
+       IF (hpimc_TbtopFile .NE. ' ' ) THEN
+        CALL READ_FLD_XY_RL( hpimc_TbtopFile, ' ', hpimc_floorice_tBL, 0, myThid)
+       ENDIF
+       IF (hpimc_TbbotFile .NE. ' ' ) THEN
+        CALL READ_FLD_XY_RL( hpimc_TbbotFile, ' ', hpimc_shelfice_tBL, 0, myThid)
+       ENDIF
+      ENDIF
+
       RETURN
       END

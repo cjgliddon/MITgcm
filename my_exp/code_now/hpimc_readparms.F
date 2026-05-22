@@ -31,12 +31,14 @@ C     iUnit      :: Work variable for IO unit number
       NAMELIST /HPIMC_PARM01/
      &       hpimc_MNC,
      &       hpimc_QbotType,   hpimc_QbotFile,
+     &       hpimc_TbtopFile,  hpimc_TbbotFile,
      &       hpimc_Scal1File,  hpimc_Scal2File,
      &       hpimc_VelUFile,   hpimc_VelVFile,
      &       hpimc_Surf1File,  hpimc_Surf2File,
      &       hpimc_addFloorice, hpimc_doAutoTini,
      &       hpimc_flooriceType, dTdz_hpi,
-     &       kappaT_hpi, gammaT_hpi, gammaS_hpi
+     &       kappaT_hpi, gammaT_hpi, gammaS_hpi,
+     &       sfz_pRef,
 
      
       IF ( .NOT.useHPIMC ) THEN
@@ -56,6 +58,8 @@ C--   Default values for HPIMC
       hpimc_QbotType    = 0
       hpimc_addFloorice  = .TRUE.
       hpimc_doAutoTIni   = .TRUE.
+      hpimc_prescribe_Tb = .TRUE.
+      sfz_pRef         = 1.0 _d +05
 C-    these values are identical to those in the shelfice pkg
       kappaT_hpi       = 1.54 _d -06
       gammaT_hpi       = 1.0 _d -05
@@ -71,6 +75,9 @@ C-    file names for initial conditions:
       hpimc_Surf1File   = ' '
       hpimc_Surf2File   = ' '
       hpimc_QbotFile    = ' '
+      hpimc_TbtopFile   = ' '
+      hpimc_TbbotFile   = ' '
+
 
       WRITE(msgBuf,'(A)') 'HPIMC_READPARMS: opening data.hpimc'
       CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,

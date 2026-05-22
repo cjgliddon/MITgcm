@@ -24,7 +24,7 @@ simpleBathy=1;         % 0: all Legendre coefficients need to be specified manua
 Tini_profile=0;        % 0: isentropic; 1: superadiabatic following Gastine et al. scaling; ; 2: read from file
 Sini_profile=0;		   % 0: isohaline; 2: read from file
 init_Vel=1;		       % 0: does nothing; 1: read from file
-prescribe_Qbot=1;	   % 0: does nothing; 1: generates and writes out a bottom heating pattern
+prescribe_Qbot=0;	   % 0: does nothing; 1: generates and writes out a bottom heating pattern
 satellite_name='myMoon';    
 restart_datfile='exp_data.mat';     
 if not(strcmp(restart_datfile, ''))
@@ -44,9 +44,9 @@ func_replace_string('data','rSphere=',sprintf('rSphere=%f,',a))
 func_replace_string('data','eosType',sprintf('eosType=%s,',eosType))
 if boundaryTopo==0
     simpleBathy=1;      % override
-    func_replace_string('data.hpimc','hpimc_prescribeTb',sprintf('hpimc_prescribeTb=.TRUE.,'))
+    func_replace_string('data.hpimc','hpimc_prescribeTb',sprintf('eosType=.TRUE.,'))
 else
-    func_replace_string('data.hpimc','hpimc_prescribeTb',sprintf('hpimc_prescribeTb=.FALSE.,'))
+    func_replace_string('data.hpimc','hpimc_prescribeTb',sprintf('eosType=.FALSE.,'))
 end
 
 
@@ -54,27 +54,26 @@ end
 % define function for nonlinear solving
 Hi0=50.0e+3; Tt0=270.0;
 function F = myEquations(res)
-    Hi=res(1);Ti=res(2);
+    res(1)=Hi;res(2)=Ti;
     F(1)=k_Ih/Hi*log(Ti/Tsurf) - Qflx_avg;
-    p1=-4/3*pi*rho_Ih^2*G*Hi*(3*a^2-3*a*Hi+Hi^2)-rho_Ih*G*log(a/(a-Hi))*(4/3*pi*a^3*rho_Ih - M);
-    F(2)=Ti-eos.eval_freezing_point(p1,S,"Ih");
+    p1=-4/3*pi*rho_Ih^2*G*Hi*(3*a^2-3*a*Hi+Hi^2)-rho_Ih*G*log(a/(a-Hi))*(4/3*pi*a&3*rho_Ih - M);
+    F(2)=eos.eval_freezing_point(p1,S,"Ih");
 end 
-x0 = [Hi0,Tt0];
-sol = fsolve(@myEquations, x0);
-Hice0=sol(1);Tt=sol(2);
-p1=-4/3*pi*rho_Ih^2*G*Hice0*(3*a^2-3*a*Hice0+Hice0^2)-rho_Ih*G*log(a/(a-Hice0))*(4/3*pi*a^3*rho_Ih - M);
+x0 = [Tt0, Hi0];
+Hice0,Tt = fsolve(@myEquations, x0);
+p1=-4/3*pi*rho_Ih^2*G*Hice0*(3*a^2-3*a*Hice0+Hice0^2)-rho_Ih*G*log(a/(a-Hice0))*(4/3*pi*a&3*rho_Ih - M);
 theta_t=eos.t_to_theta(p1,Tt,S,pref);
 fprintf("Ice shell thickness: %.6f\n", Hice0)
 fprintf("Surface theta: %.6f\n", theta_t)
 
 
-function poc = calc_ocean_pres(r, rho_oc, G, a, Hice0, M, rho_Ih, p1)
+function poc = calc_ocean_pres(r, rho_oc, G, a, Hice0, M, rho_Ih, p0_ice)
 % Calculates the interior ocean pressure at radius r assuming uniform
 % density rho_oc.
     r_inner = a - Hice0;
     poc = rho_oc*G*(r_inner-r)/(r_inner*r) * (M - 4*pi/3*rho_Ih*(3*a*r_inner + Hice0^2) ...
             - 2*pi/3*rho_oc*r_inner*(r_inner - r)*(2*r_inner + r));
-    poc = poc + p1;
+    poc = poc + p0_ice;
 end
 
 if Tini_profile==0
@@ -87,11 +86,11 @@ if Tini_profile==0
 
     for hi = 1:H_iters
         r_coords = linspace(a - Hice0 - Hoc_i, a - Hice0, trap_res);  % Use Hoc_i, not Hoc
-        rho_p = @(p) eos.rho_pThetaS(p, theta_t, S, pref);
+        rho_p = @(p) eos.rho_pThetaS(p, theta_surf, S, pref);
         
         for rhoi = 1:rho_iters
             % Pass parameters explicitly
-            pres_r = @(r) calc_ocean_pres(r, rho_oci, G, a, Hice0, M, rho_Ih, p1);
+            pres_r = @(r) calc_ocean_pres(r, rho_oci, G, a, Hice0, M, rho_Ih, p0_ice);
             integrand = zeros(size(r_coords));
             for idx = 1:length(r_coords)
                 integrand(idx) = rho_p(pres_r(r_coords(idx)));
@@ -102,17 +101,17 @@ if Tini_profile==0
         ac = a - Hice0 - Hoc_i;
         rho_cr = (1/ac^3) * (3*M/4/pi - rho_oci*((ac + Hoc_i)^3 - ac^3) - rho_Ih*(a^3 - (ac + Hoc_i)^3));
         % TODO
-        delta_theta = @(p) eos.t_to_theta(p, eos.eval_freezing_point(p, S, bottom_ice_phase), S, pref) - theta_t;
-        p_guess = calc_ocean_pres(a - Hice0 - Hoc_i, rho_oci, G, a, Hice0, M, rho_Ih, p1);
+        delta_theta = @(p) eos.t_to_theta(p, eos.eval_freezing_point(p, S, bottom_ice_phase), S, pref) - theta_surf;
+        p_guess = calc_ocean_pres(a - Hice0 - Hoc_i, rho_oci, G, a, Hice0, M, rho_Ih, p0_ice);
         fprintf('Pressure guess %.6f yields freezing point:\n', p_guess);
-        fprintf('%.6f\n', theta_t + delta_theta(p_guess));
+        fprintf('%.6f\n', theta_surf + delta_theta(p_guess));
         
         % Use single initial guess (fzero will use secant/quasi-Newton methods)
         p_freeze = fzero(delta_theta, p_guess);
         % fprintf('Freezing pressure: %.6f\n', p_freeze);
         
         % invert pres_func to find the freezing radius
-        delta_pres = @(r) calc_ocean_pres(r, rho_oci, G, a, Hice0, M, rho_Ih, p1) - p_freeze;
+        delta_pres = @(r) calc_ocean_pres(r, rho_oci, G, a, Hice0, M, rho_Ih, p0_ice) - p_freeze;
         r_guess1 = a - Hice0;
         r_guess2 = 0.1 * a;
         Hoc_i = a - fzero(delta_pres, [r_guess1, r_guess2]) - Hice0;
@@ -120,7 +119,7 @@ if Tini_profile==0
     end
 % else if Tini_profile == 1
 end
-Hoc0 = Hoc_i; rho0 = rho_oci; p2=p_freeze;
+Hoc0 = Hoc_i; rho0 = rho_oci;
 fprintf("Ocean depth: %.6f\n", Hoc0);
 fprintf("Mean ocean density: %.6f\n", rho0)
 func_replace_string('data','rhoConst=',sprintf('rhoConst=%f,',rho0));
@@ -169,12 +168,17 @@ func_replace_string('data.shelfice','SHELFICEmassFile',['SHELFICEmassFile=''',fn
 fprintf(['SHELFICEmassFile=''',fname,''','])
 
 %% bathymetry & vertical profile
-if boundaryTopo==0
-    % no topography, just 
-    zmin=-(Hice0+Hoc0);
-    Hliq=Hoc0;
-    zbathy=zmin;
+z_bathy = -(Hice0 + Hoc0);  % total depth of model domain
+if simpleBathy == 1         % bathymetry follows a sin^2 function of total amplitude dHbot
+    bH2 = -(2/3)*dHbot;
+    bHs = [0.,bH2,0.,0.,0.,0.,];
 end
+for m = 1:length(bHs)
+    z_bathy = z_bathy + bHs(m)*Ps(m,:);
+end
+% z_bathy=repmat(reshape(z_bathy,[1,ny]),[nx,1]);
+z_min = min(z_bathy);
+Hliq = -(z_min + Hice0);     % total "liquid depth"
 
 ratio = 1.0 + drchfrac;
 transition = [];
@@ -215,17 +219,16 @@ else
 end
 dh = transpose([Hice0; dz]);
 fprintf("dh profile (km): %.6f\n", dh/1.0e+3);
-func_replace_string('data','delR',sprintf('delR=%f,',dh));
 hf = [0,cumsum(dh)];
 hc=(hf(2:end)+hf(1:end-1))./2;  % centered depth coordinates
 rc=a-hc;
 nr=length(hc);
-fprintf("Domain size in z %i:\n",nr)
+fprintf("Domain size in z %i\n:",nr)
 
-zbathy_twod = repmat(zbathy,[nx,ny]);
+zbathy_twod = repmat(z_bathy, nx, 1);
 zbathy_twod(:,1)=zeros(nx,1);
 zbathy_twod(:,ny)=zeros(nx,1);
-file_name=['my_bathy_',sprintf('%d',-zmin/1.0e+3),'km.bin'] ;
+file_name=['my_bathy_',sprintf('%d',-z_min/1.0e+3),'km.bin'] ;
 fid=fopen(file_name,'w','b');
 fwrite(fid,zbathy_twod,prec); fclose(fid);
 fprintf(['\nwrite file: ', file_name])
@@ -236,8 +239,9 @@ fprintf(['bathyFile=''',file_name,''','])
 %% gravity profile
 
 g0 = G*M/a^2;
-g_top = p1/(rho_Ih*dh(1));
-g = [g_top, 4*G*pi/3.*((rho_cr - rho0).*ac^3./rc(2:nr).^2 + rho0.*rc(2:nr))];
+g_top = p0_ice/(rho_Ih*dh(1));
+g = [g_top, 4*G*pi/3.*((rho_cr - rho_oc).*ac^3./rc(2:nr).^2 + rho_oc.*rc(2:nr))];
+grav_fac = g/g0;
 % fprintf("gravity profile (m/s^2): %.6f\n", g);
 
 func_replace_string('data','gravity=',sprintf('gravity=%f,',g0));
@@ -251,18 +255,16 @@ fprintf(['gravityFile=''',fname,''','])
 
 %% initial temperature profile
 if Tini_profile == 0
-    Tprof = theta_t*ones(1, nr);
-    deltav_theta=0;
+    Tprof = theta_surf*ones(nr);
 elseif Tini_profile == 1
-    Tprof = theta_t*ones([1,nr]);
-    hbathy_max = - max(zbathy);
+    Tprof = theta_surf*ones([1,nr]);
+    hbathy_max = - max(z_bathy);
     mask=hf(2:end) > hbathy_max;
     bathy_rs = rc(mask);
-    bathy_ps = arrayfun(@(r) calc_ocean_pres(r, rho_oci, G, a, Hice0, M, rho_Ih, p1), bathy_rs);
+    bathy_ps = arrayfun(@(r) calc_ocean_pres(r, rho_oci, G, a, Hice0, M, rho_Ih, p0_ice), bathy_rs);
     bathy_thetas = arrayfun(@(p) eos.t_to_theta(p, eos.eval_freezing_point(p, S, bottom_ice_phase), S, pref), bathy_ps);
     Tprof(mask) = bathy_thetas;
     Tprof(~mask) = min(bathy_thetas);
-    deltav_theta=Tprof(end)-Tprof(1);
 elseif Tini_profile == 2
     Tini = restart_data.theta;
     Tini = permute(Tini, ndims(Tini):-1:1);
@@ -316,48 +318,18 @@ end
 
 %% bottom heating profile
 if prescribe_Qbot > 0
-    func_replace_string('data.hpimc','hpimc_QbotType','hpimc_QbotType=1,')
+    func_replace_string('data.seafrz','sfz_QbotType',['sfz_QbotType=1,'])
     if prescribe_Qbot == 1
-        Qbot = repmat(Qflx_avg,[nx,ny]);
-        fname='Qbot_uniform.bin';
-        fid = fopen(fname,'w','b');
-        fwrite(fid,Qbot,prec);
-        fclose(fid);
-        func_replace_string('data.hpimc','hpimc_QbotFile',['hpimc_QbotFile=''',fname,''','])
-        fprintf(['hpimc_QbotFile=''',fname,''','])
+        Qbot = 1.0e-2;
+        Qbot = repmat(Qbot,[nx,ny]);
+        fname = 'Qbot_uniform.bin';
     end
+    fid = fopen(fname,'w','b');
+    fwrite(fid,Qbot,prec);
+    fclose(fid);
+    func_replace_string('data.seafrz','sfz_QbotFile',['sfz_QbotFile=''',fname,''','])
+    fprintf(['sfz_QbotFile=''',fname,''','])
 end
-
-%% bottom temperature profile
-if boundaryTopo == 0
-    % top boundary
-    rho1=eos.rho_pThetaS(p1, theta_t, S, pref);
-    topo1=delta_ht.*P2;   % multiply by 2nd Legendre polynomial
-    deltap1=rho1*g_top*topo1;
-    T1=arrayfun(@(p) eos.eval_freezing_point(p, S, 'Ih'), deltap1+p1);
-    theta1=arrayfun(@(T) eos.t_to_theta(p1, T, S, pref), T1);
-    theta1=repmat(theta1,[nx,1])-273.15;
-    % bottom boundary
-    theta_b=theta_t+deltav_theta;
-    rho2=eos.rho_pThetaS(p2,theta_b,S,pref);
-    topo2=-delta_hb.*P2;
-    deltap2=rho2*g(end)*topo2;
-    T2=arrayfun(@(p) eos.eval_freezing_point(p, S, bottom_ice_phase), deltap2+p2);
-    theta2=arrayfun(@(T) eos.t_to_theta(p2, T, S, pref), T2);
-    theta2=repmat(theta2,[nx,1])-273.15;
-    fprintf("Ocean top boundary layer PT: %.6f\n", theta1);
-    fprintf("Ocean bottom boundary layer PT: %.6f\n", theta2);
-
-    % save out
-    fname1='thetaBL_top.bin';fname2='thetaBL_bot.bin';
-    fid=fopen(fname1,'w','b'); fwrite(fid,theta1,prec); fclose(fid);
-    fid=fopen(fname2,'w','b'); fwrite(fid,theta2,prec); fclose(fid);
-    func_replace_string('data.hpimc', 'hpimc_TbtopFile', ['hpimc_TbtopFile=''',fname1,''',']);
-    func_replace_string('data.hpimc', 'hpimc_TbbotFile', ['hpimc_TbbotFile=''',fname2,''',']);
-    fprintf(['hpimc_TbtopFile=''',fname1,''',']);
-    fprintf(['hpimc_TbbotFile=''',fname2,''',']);
-end
-
 
 end
 

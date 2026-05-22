@@ -168,11 +168,10 @@ C     == Functions
 C     == Local variables ==
       INTEGER i,j
       _RL     ct, sa, p, tReal, rhoRecip
-      _RL     Patodb,PaToMPa,sfz_pRef 
+      _RL     Patodb,PaToMPa
 
       Patodb  = 1.0 _d -4
       PaToMPa = 1.0 _d -6
-      sfz_pRef= 1.0 _d +5
 
       DO j=jMin,jMax
        DO i=iMin,iMax
@@ -212,15 +211,12 @@ C     Arguments
       EXTERNAL SFZ_TEMP
 
 C     Local variables
-      _RL mwNaCl
       _RL PaTodb,PaToMPa
-      _RL tReal,rhoRecip,sfz_pRef
+      _RL tReal,rhoRecip
       
       PaTodb  = 1.0     _d -4
       PaToMPa = 1.0     _d -6
-      sfz_pRef = 1.0    _d +5
 C      dbToMPa = 1.0     _d -2
-      mwNaCl  = 1.80153 _d -2
       
       tReal = SFZ_TEMP(sa, ct+273.15, p, sfz_pRef)
 C      PRINT *, "FIND_RHO_SFZ_SCALAR data (sa, ct, p, tReal, rho):"

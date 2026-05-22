@@ -53,6 +53,9 @@ C     === Global variables ===
 # include "W2_EXCH2_SIZE.h"
 # include "W2_EXCH2_TOPOLOGY.h"
 #endif /* ALLOW_EXCH2 */
+#ifdef ALLOW_HPIMC
+#include "HPIMC.h"
+#endif /* ALLOW_HPIMC */
 #include "SET_GRID.h"
 
 C     !INPUT/OUTPUT PARAMETERS:
@@ -124,8 +127,9 @@ C     drKp1, recip_drLoc
       _RL SW_TEMP
       EXTERNAL SW_TEMP
 #endif
-C     CJG: dummy variable for in-situ temp
+C     CJG: dummy variables
       _RL tInSituLoc
+      _RL ocQflxUB, Qcond, sigma, sBL, tBL
 
 #ifdef ALLOW_HPIMC
       _RL deltaT_surf
@@ -133,7 +137,6 @@ C     CJG: dummy variable for in-situ temp
       EXTERNAL SFZ_PTMP
       _RL SFZ_TEMP
       EXTERNAL SFZ_TEMP
-      PARAMETER sfz_pRef = 1.0 _d 05
       PARAMETER db2Pa = 1.0 _d 04
 #endif /* ALLOW_HPIMC */
 
@@ -646,6 +649,27 @@ c     note that dFac=0 for diffusive only ice
             fwflxFac    = 0. _d 0
             IF ( tInSituLoc .GT. thetaFreeze ) fwflxFac = dFac
 C     a few abbreviations
+#ifdef ALLOW_HPIMC
+            IF ( hpimc_prescribeTb ) THEN
+C           CJG: with prescribed BL temp, the calc. is much simpler
+             ocQflxUB = -rUnit2mass*shiTransCoeffT(i,j,bi,bj)
+     &        *HeatCapacity_Cp*(hpimc_shelfice_tBL(i,j,bi,bj) 
+     &        - tInSituLoc)
+C           CJG: convert boundary-layer temp. to absolute temp.
+             tBL = SFZ_TEMP(sBL,hpimc_shelfice_tBL(i,j,bi,bj)+273.15,
+     &                      pLoc(I,J)*db2Pa,sfz_pRef)-273.15
+             Qcond = ABS(SHELFICEkappa) * LOG( tBL 
+     &        / SHELFICEthetaSurface )/H_ice0
+             sigma = (ocQflxUB + Qcond)/SHELFICElatentHeat
+             sBL = rUnit2mass*shiTransCoeffS(i,j,bi,bj)*sLoc(i,j)
+     &        /(rUnit2mass*shiTransCoeffS(i,j,bi,bj) - sigma)
+             shelficeFreshWaterFlux(I,J,bi,bj) = -sigma
+             shelficeHeatFlux(I,J,bi,bj) = ocQflxUB
+             shelficeForcingT(i,j,bi,bj) 
+     &        = ocQflxUB/(HeatCapacity_Cp*mass2rUnit)
+             shelficeForcingS(i,j,bi,bj) = mass2rUnit*sBL*sigma
+            ELSE
+#endif /* ALLOW_HPIMC */
             eps1 = rUnit2mass*HeatCapacity_Cp
      &           *shiTransCoeffT(i,j,bi,bj)
             eps2 = rUnit2mass*SHELFICElatentHeat
@@ -818,10 +842,9 @@ C            PRINT *, "Term 3 (Tidal):",
 C     &          -(Htide(I,J,bi,bj)*tidefac+Hmixbend(I,J,bi,bj))
 C            PRINT *, "Term 4 (Latent):",
 C     &          -freshWaterFlux*SHELFICElatentHeat
-Ci           PRINT *, "TERM 5 (FWFLX):", freshWaterFlux
+C            PRINT *, "TERM 5 (FWFLX):", freshWaterFlux
 C     &          * HeatCapacity_Cp*(thetaFreeze - tLoc(I,J))*cFac
 C            PRINT *, "Theta & Tloc:", thetaFreeze, tLoc(I,J)
-
 
 C--   compute surface tendencies
 C--   DNG: correction to use cell value for flux rather than BL values
@@ -845,7 +868,10 @@ C     &            *mass2rUnit*(tLoc(I,J) - theta(I,J,K,bi,bj))
      &           )*( saltFreeze - sLoc(I,J) )
      &           - rFWinBL*freshWaterFlux*mass2rUnit
      &            *( sLoc(I,J) - salt(I,J,K,bi,bj) )
-
+#ifdef ALLOW_HPIMC
+            ENDIF
+#endif /* ALLOW_HPIMC */
+C          
            ELSE
             shelfIceHeatFlux      (I,J,bi,bj) = 0. _d 0
             shelfIceFreshWaterFlux(I,J,bi,bj) = 0. _d 0

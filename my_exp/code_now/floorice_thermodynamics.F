@@ -49,7 +49,6 @@ C     kLB       :: grid cell location of lower boundary
       _RL  ocQflxLB, ocSflxLB
       _RL  sBL, tBL
       _RL  dbToMPa,PaTodb,MPa2Pa
-      _RL  sfz_pRef
 C-    FP coefficient names for more readable code
       _RL  a1,a2,a3,a4,a5
 C-    dummy variables for solving the "three-equations" system
@@ -70,7 +69,6 @@ C     conversion factors & EOS constants
       dbToMPa  = 1.0 _d -2
       PaTodb   = 1.0 _d -4
       MPa2Pa   = 1.0 _d -6
-      sfz_pRef = 1.0 _d +5
 C     define FP coefficient names
 
       a1 = sfz_FPcoef_l(1)
@@ -121,53 +119,60 @@ C           PRINT *, tLoc, "Kelvin"
 C           PRINT *, "Local theta: ", theta(i,j,kLB,bi,bj)
 C           PRINT *, "sLoc: ", sLoc
 C           PRINT *, "pLoc (MPa): ", pLoc
+            IF (hpimc_prescribeTb) THEN
+             ocQflxLB = rhoLoc*gammaT_hpi*HeatCapacity_Cp* 
+     &        (hpimc_floorice_tBL(i,j,bi,bj) - thetaLoc) 
+             sigma = (ocQflxLb - hpimc_Qbot(i,j,bi,bj))/Lfus_hpi
+             sBL = rhoLoc*gammaS_hpi*sLoc/(rhoLoc*gammaS_hpi - sigma)
+             ocSflxLB = sBL*sigma
+            ELSE
+C            three-equations system
+             e1 = hpimc_Qbot(i,j,bi,bj)
+             e2 = rhoLoc*gammaT_hpi*HeatCapacity_Cp
+             e3 = -rhoLoc*gammaS_hpi*Lfus_hpi
+             e4 = e2*(tLoc-a1*pLoc-a3)
+             aqe = e2*a2
+             bqe = e3 - e1 - e4
+             cqe = -sLoc*e3
+             IF (aqe .NE. 0. _d 0) THEN
+C              sBL = (-1*bqe - SQRT(bqe*bqe -4*aqe*cqe))/(2*aqe)
+              sBL = -2*cqe/(bqe - SQRT(bqe*bqe - 4*aqe*cqe))
+             ELSE
+              sBL = -1*cqe/bqe
+             ENDIF
+             tBL = a1*pLoc + a2*sBL + a3
+             IF (sBL .NE. 0. _d 0) THEN
+              sigma = gammaS_hpi*rhoLoc*(1 - sLoc/sBL)
+             ELSE
+              sigma = 0. _d 0
+             ENDIF
 
-C           three-equations system
-            e1 = hpimc_Qbot(i,j,bi,bj)
-            e2 = rhoLoc*gammaT_hpi*HeatCapacity_Cp
-            e3 = -rhoLoc*gammaS_hpi*Lfus_hpi
-            e4 = e2*(tLoc-a1*pLoc-a3)
-            aqe = e2*a2
-            bqe = e3 - e1 - e4
-            cqe = -sLoc*e3
-            IF (aqe .NE. 0. _d 0) THEN
-C             sBL = (-1*bqe - SQRT(bqe*bqe -4*aqe*cqe))/(2*aqe)
-             sBL = -2*cqe/(bqe - SQRT(bqe*bqe - 4*aqe*cqe))
-            ELSE
-             sBL = -1*cqe/bqe
+C             hpimc_floorice_Qflx(i,j,bi,bj) = sigma
+C     &            * (HeatCapacity_Cp*(tLoc-tBL) - Lfus_hpi ) 
+             ocSflxLB = sigma*sBL
+             ocQflxLB = e2*(tBL-tLoc)
+             IF (checkBalances) THEN
+              PRINT *, "Checking balances for floorice at:",i,j,bi,bj
+              PRINT *, "Lfus, e1-e4, aqe,bqe,cqe,discriminant"
+              PRINT *, Lfus_hpi,e1,e2,e3,e4,aqe,bqe,cqe
+              PRINT *, bqe*bqe - 4*aqe*cqe
+              PRINT *, "Conduction term: "
+              PRINT *, e1
+              PRINT *, "Diffusive term: "
+              PRINT *, ocQflxLB
+              PRINT *, "Latent heating of BL: "
+              PRINT *, Lfus_hpi*sigma
+              PRINT *, "Diffusive salt flux:"
+              PRINT *, rhoLoc*gammaS_hpi*(sLoc - sBL)
+              PRINT *, "Boundary layer state:"
+              PRINT *, pLoc, tBL, sBL
+              PRINT *, "Ocean state:"
+              PRINT *, pLoc, sLoc, tLoc, rhoLoc
+             ENDIF 
+             hpimc_floorice_dmdt(i,j,bi,bj) = sigma
+             hpimc_floorice_Sflx(i,j,bi,bj) = -sigma*sBL
+             hpimc_floorice_Qflx(i,j,bi,bj) = ocQflxLB
             ENDIF
-            tBL = a1*pLoc + a2*sBL + a3
-            IF (sBL .NE. 0. _d 0) THEN
-             sigma = gammaS_hpi*rhoLoc*(1 - sLoc/sBL)
-            ELSE
-             sigma = 0. _d 0
-            ENDIF
-            hpimc_floorice_dmdt(i,j,bi,bj) = sigma
-            hpimc_floorice_Sflx(i,j,bi,bj) = -sigma*sBL
-C            hpimc_floorice_Qflx(i,j,bi,bj) = sigma
-C     &           * (HeatCapacity_Cp*(tLoc-tBL) - Lfus_hpi ) 
-            ocSflxLB = sigma*sBL
-            ocQflxLB = e2*(tBL-tLoc)
-            hpimc_floorice_Qflx(i,j,bi,bj) = ocQflxLB
-            IF (checkBalances) THEN
-             PRINT *, "Checking balances for floorice at:",i,j,bi,bj
-             PRINT *, "Lfus, e1-e4, aqe,bqe,cqe,discriminant"
-             PRINT *, Lfus_hpi,e1,e2,e3,e4,aqe,bqe,cqe
-             PRINT *, bqe*bqe - 4*aqe*cqe
-             PRINT *, "Conduction term: "
-             PRINT *, e1
-             PRINT *, "Diffusive term: "
-             PRINT *, ocQflxLB
-             PRINT *, "Latent heating of BL: "
-             PRINT *, Lfus_hpi*sigma
-             PRINT *, "Diffusive salt flux:"
-             PRINT *, rhoLoc*gammaS_hpi*(sLoc - sBL)
-             PRINT *, "Boundary layer state:"
-             PRINT *, pLoc, tBL, sBL
-             PRINT *, "Ocean state:"
-             PRINT *, pLoc, sLoc, tLoc, rhoLoc
-            ENDIF 
-C           ELSE
 C            hpimc_floorice_dmdt(i,j,bi,bj) = 0. _d 0
 C            IF (sfz_fpParamType .eq. 'LINEAR') THEN
 C             tBL = sfz_FPcoef_l(1) + sfz_FPcoef_l(2)*pLoc 
