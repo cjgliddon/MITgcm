@@ -131,6 +131,7 @@ C                                (used only if hpimc_prescribeTb = .TRUE.)
       _RL hpimc_flooriceForcingT(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL hpimc_flooriceForcingS(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL hpimc_Qbot(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL hpimc_shelfice_tBL(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
 
       COMMON /SFZ_STATE_2D/
      &    hpimc_floorice_Qflx, hpimc_floorice_dmdt,

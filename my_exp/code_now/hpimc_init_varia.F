@@ -50,13 +50,16 @@ C     2-dim.
 #ifdef HPIMC_2D_STATE
         DO j=1-OLy,sNy+OLy
          DO i=1-OLx,sNx+OLx
-          hpimc_floorice_tBL(i,j,bi,bj)  = 0. _d 0
           hpimc_floorice_sBL(i,j,bi,bj)  = 0. _d 0
           hpimc_floorice_Qflx(i,j,bi,bj) = 0. _d 0
           hpimc_floorice_dmdt(i,j,bi,bj) = 0. _d 0
           hpimc_floorice_Sflx(i,j,bi,bj) = 0. _d 0
           hpimc_flooriceForcingT(i,j,bi,bj) = 0. _d 0
           hpimc_flooriceForcingS(i,j,bi,bj) = 0. _d 0
+          IF ( hpimc_prescribeTb .EQ. .FALSE. ) THEN
+           hpimc_floorice_tBL(i,j,bi,bj) = 0. _d 0
+           hpimc_shelfice_tBL(i,j,bi,bj) = 0. _d 0
+          ENDIF
          ENDDO
         ENDDO
 #endif /* HPIMC_2D_STATE */

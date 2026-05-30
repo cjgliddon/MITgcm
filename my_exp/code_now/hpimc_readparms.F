@@ -36,9 +36,10 @@ C     iUnit      :: Work variable for IO unit number
      &       hpimc_VelUFile,   hpimc_VelVFile,
      &       hpimc_Surf1File,  hpimc_Surf2File,
      &       hpimc_addFloorice, hpimc_doAutoTini,
+     &       hpimc_prescribeTb,
      &       hpimc_flooriceType, dTdz_hpi,
      &       kappaT_hpi, gammaT_hpi, gammaS_hpi,
-     &       sfz_pRef,
+     &       sfz_pRef
 
      
       IF ( .NOT.useHPIMC ) THEN
@@ -58,7 +59,7 @@ C--   Default values for HPIMC
       hpimc_QbotType    = 0
       hpimc_addFloorice  = .TRUE.
       hpimc_doAutoTIni   = .TRUE.
-      hpimc_prescribe_Tb = .TRUE.
+      hpimc_prescribeTb = .TRUE.
       sfz_pRef         = 1.0 _d +05
 C-    these values are identical to those in the shelfice pkg
       kappaT_hpi       = 1.54 _d -06

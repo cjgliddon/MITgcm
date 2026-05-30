@@ -83,8 +83,8 @@ C     flag for debugging
       IF ( hpimc_addFloorice ) THEN      
        DO bj = myByLo(myThid), myByHi(myThid)
         DO bi = myBxLo(myThid), myBxHi(myThid)
-         DO j = 1-OLy,sNy+OLy
-          DO i = 1-OLx,sNx+OLx
+         DO j = 1,sNy
+          DO i = 1,sNx
 C     Initialize forcing arrays with zeros
            hpimc_flooriceForcingT(i,j,bi,bj) = 0. _d 0
            hpimc_flooriceForcingS(i,j,bi,bj) = 0. _d 0 
@@ -125,6 +125,10 @@ C           PRINT *, "pLoc (MPa): ", pLoc
              sigma = (ocQflxLb - hpimc_Qbot(i,j,bi,bj))/Lfus_hpi
              sBL = rhoLoc*gammaS_hpi*sLoc/(rhoLoc*gammaS_hpi - sigma)
              ocSflxLB = sBL*sigma
+C           Diagnostics
+             hpimc_floorice_dmdt(i,j,bi,bj) = sigma
+             hpimc_floorice_Sflx(i,j,bi,bj) = -sigma*sBL
+             hpimc_floorice_Qflx(i,j,bi,bj) = ocQflxLB
             ELSE
 C            three-equations system
              e1 = hpimc_Qbot(i,j,bi,bj)

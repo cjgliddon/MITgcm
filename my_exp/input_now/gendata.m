@@ -8,32 +8,36 @@ eos = eosMethods(); % defined in the file eosMethods.m, in same directory as gen
 G=6.674e-11;           % Newton's gravitational constant, N m^2 kg^-2
 rho_Ih=917.;           % ice-Ih density, kg m^-3
 k_Ih=651;          % ice-Ih base thermal conductivity, W/m
-kappa_w=1.0e-4;        % water thermal diffusivity
-nu_w=0.1;              % water (eddy) viscosity, m^2 s^-1
-M=1.0759e+23;          % planetary mass, kg
-a=2410.3e+03;          % planetary radius, m
+kappa_wh=1.0e-3;       % water thermal diffusivity
+kappa_wr=1.0e-3;
+nu_wh=1.;              % water (eddy) viscosity, m^2 s^-1
+nu_wr=1.;
+alpha_T=4.5e-4;        % water thermal expansion coefficient
+cpw=4.184e+03;         % water heat capacity
+M=1.4819e+23;          % planetary mass, kg
+a=2634.1e+03;          % planetary radius, m
 Qflx_avg=1.0e-02;      % mean outward heat flux, W m^-2
-Tsurf=100;             % surface temperature, K
+Tsurf=110;             % surface temperature, K
 S=10.0;                % salinity, g kg^-1
 pref=1.0e+05;          % reference pressure for PT-T interconversion
-bottom_ice_phase="V";  % reference bottom ice phase
+bottom_ice_phase="V"; % reference bottom ice phase
 delta_ht=1.0e3;        % topographic variation scale for top boundary
 delta_hb=1.0e3;        % ditto, but at the bottom
 boundaryTopo=0;        % 0: "pseudo" boundary topography from prescribed temperature profiles; 1: "real" topography
 simpleBathy=1;         % 0: all Legendre coefficients need to be specified manually; 1: bathymetry is just -P2(sin(phi))
-Tini_profile=0;        % 0: isentropic; 1: superadiabatic following Gastine et al. scaling; ; 2: read from file
+Tini_profile=1;        % 0: isentropic; 1: superadiabatic following Gastine et al. scaling; ; 2: read from file
 Sini_profile=0;		   % 0: isohaline; 2: read from file
-init_Vel=1;		       % 0: does nothing; 1: read from file
+init_Vel=0;		       % 0: does nothing; 1: read from file
 prescribe_Qbot=1;	   % 0: does nothing; 1: generates and writes out a bottom heating pattern
 satellite_name='myMoon';    
-restart_datfile='exp_data.mat';     
+restart_datfile='';     
 if not(strcmp(restart_datfile, ''))
     restart_data=load(restart_datfile);
 end
 
-nx=336.;ny=336.;        % grid size in x and y
-dx=0.5;dy=0.5; yyM=84.; % grid resolution in x and y; maximum latitude (+/-)
-dz_max = 2.0e+03; dz_min = 5.0e+02;   % max and min grid spacing for vertical levels
+nx=96;ny=96;        % grid size in x and y
+dx=1.75;dy=1.75; yyM=84.; % grid resolution in x and y; maximum latitude (+/-)
+dz_max = 2.5e+03; dz_min = 8.0e+02;   % max and min grid spacing for vertical levels
 drchfrac = 0.10;                      % how much do we allow the vertical spacing to change by for adjacent cells?
 
 prec='real*4';                        % data save-out precision
@@ -42,6 +46,10 @@ prec='real*4';                        % data save-out precision
 eosType='SEAFRZ';
 func_replace_string('data','rSphere=',sprintf('rSphere=%f,',a))
 func_replace_string('data','eosType',sprintf('eosType=%s,',eosType))
+%func_replace_string('data','viscAh',sprintf('viscAh=%f,',nu_wh))
+%func_replace_string('data','viscAr',sprintf('viscAr=%f,',nu_wr))
+%func_replace_string('data','diffKhT',sprintf('diffKhT=%f,',kappa_wh))
+%func_replace_string('data','diffKrT',sprintf('diffKrT=%f,',kappa_wr))
 if boundaryTopo==0
     simpleBathy=1;      % override
     func_replace_string('data.hpimc','hpimc_prescribeTb',sprintf('hpimc_prescribeTb=.TRUE.,'))
@@ -51,23 +59,29 @@ end
 
 
 %% Part 1: calculate balanced 1D internal structure
-% define function for nonlinear solving
+power=Qflx_avg*4*pi*a^2;    % total power output by radiogenic heating
+
 Hi0=50.0e+3; Tt0=270.0;
 function F = myEquations(res)
     Hi=res(1);Ti=res(2);
-    F(1)=k_Ih/Hi*log(Ti/Tsurf) - Qflx_avg;
-    p1=-4/3*pi*rho_Ih^2*G*Hi*(3*a^2-3*a*Hi+Hi^2)-rho_Ih*G*log(a/(a-Hi))*(4/3*pi*a^3*rho_Ih - M);
+% we multiply by 1e6 because otherwise the residual is very small by construction, which causes problems with fsolve's tolerance    
+    F(1)=(k_Ih/Hi*log(Ti/Tsurf) - Qflx_avg)*1.0e6;   
+    p1=(rho_Ih*G*Hi)/(a^2-a*Hi)*(M+2*pi*rho_Ih*a^2*Hi-2*pi*rho_Ih*a*Hi^2/3);
+%    fprintf('p1=%.6f\n',p1);
     F(2)=Ti-eos.eval_freezing_point(p1,S,"Ih");
 end 
 x0 = [Hi0,Tt0];
 sol = fsolve(@myEquations, x0);
 Hice0=sol(1);Tt=sol(2);
-p1=-4/3*pi*rho_Ih^2*G*Hice0*(3*a^2-3*a*Hice0+Hice0^2)-rho_Ih*G*log(a/(a-Hice0))*(4/3*pi*a^3*rho_Ih - M);
+p1=(rho_Ih*G*Hice0)/(a^2-a*Hice0)*(M+2*pi*rho_Ih*a^2*Hice0-2*pi*rho_Ih*a*Hice0^2/3);
 theta_t=eos.t_to_theta(p1,Tt,S,pref);
 fprintf("Ice shell thickness: %.6f\n", Hice0)
 fprintf("Surface theta: %.6f\n", theta_t)
 
+% gravity at the top of the ocean
+g_top = p1/(rho_Ih*Hice0);
 
+% define function for nonlinear solving
 function poc = calc_ocean_pres(r, rho_oc, G, a, Hice0, M, rho_Ih, p1)
 % Calculates the interior ocean pressure at radius r assuming uniform
 % density rho_oc.
@@ -77,12 +91,13 @@ function poc = calc_ocean_pres(r, rho_oc, G, a, Hice0, M, rho_Ih, p1)
     poc = poc + p1;
 end
 
-if Tini_profile==0
+if Tini_profile==0 | Tini_profile==1
     % iteratively estimate rho_oc and H_oc
-    H_iters = 3;
+    H_iters = 5;
     rho_iters = 3;
     rho_oci = 1100.0;
     Hoc_i   = 60.0e+03;
+    deltav_theta = 0.02;
     trap_res = 31;
 
     for hi = 1:H_iters
@@ -102,10 +117,10 @@ if Tini_profile==0
         ac = a - Hice0 - Hoc_i;
         rho_cr = (1/ac^3) * (3*M/4/pi - rho_oci*((ac + Hoc_i)^3 - ac^3) - rho_Ih*(a^3 - (ac + Hoc_i)^3));
         % TODO
-        delta_theta = @(p) eos.t_to_theta(p, eos.eval_freezing_point(p, S, bottom_ice_phase), S, pref) - theta_t;
+        delta_theta = @(p) eos.t_to_theta(p, eos.eval_freezing_point(p, S, bottom_ice_phase), S, pref) - deltav_theta - theta_t;
         p_guess = calc_ocean_pres(a - Hice0 - Hoc_i, rho_oci, G, a, Hice0, M, rho_Ih, p1);
         fprintf('Pressure guess %.6f yields freezing point:\n', p_guess);
-        fprintf('%.6f\n', theta_t + delta_theta(p_guess));
+        fprintf('%.6f\n', theta_t + deltav_theta + delta_theta(p_guess));
         
         % Use single initial guess (fzero will use secant/quasi-Newton methods)
         p_freeze = fzero(delta_theta, p_guess);
@@ -117,6 +132,10 @@ if Tini_profile==0
         r_guess2 = 0.1 * a;
         Hoc_i = a - fzero(delta_pres, [r_guess1, r_guess2]) - Hice0;
         % fprintf('Ocean depth after %d iterations: %.6f\n', mi, Hoc_i);
+        if Tini_profile == 1
+	        deltav_theta=sqrt(nu_wr*(ac/(a-Hice0))*power/(alpha_T*rho_oci*cpw*g_top*Hoc_i^2));
+        end
+        fprintf('Superadiabatic temperature gradient (K): %.6f\n',deltav_theta)
     end
 % else if Tini_profile == 1
 end
@@ -215,7 +234,7 @@ else
 end
 dh = transpose([Hice0; dz]);
 fprintf("dh profile (km): %.6f\n", dh/1.0e+3);
-func_replace_string('data','delR',sprintf('delR=%f,',dh));
+%func_replace_string('data','delR',['delR=',sprintf('%f,',dh),',']);
 hf = [0,cumsum(dh)];
 hc=(hf(2:end)+hf(1:end-1))./2;  % centered depth coordinates
 rc=a-hc;
@@ -250,10 +269,11 @@ func_replace_string('data','gravityFile',['gravityFile=''',fname,''','])
 fprintf(['gravityFile=''',fname,''','])
 
 %% initial temperature profile
-if Tini_profile == 0
+if Tini_profile == 0 | Tini_profile == 1
     Tprof = theta_t*ones(1, nr);
-    deltav_theta=0;
-elseif Tini_profile == 1
+%    deltav_theta=0;
+    Tprof(2:end)=Tprof(2:end)+deltav_theta*(hc(2:end)-mean(hc(2:end)))/(hf(end)-hf(2));
+elseif Tini_profile == 3
     Tprof = theta_t*ones([1,nr]);
     hbathy_max = - max(zbathy);
     mask=hf(2:end) > hbathy_max;
@@ -345,8 +365,8 @@ if boundaryTopo == 0
     T2=arrayfun(@(p) eos.eval_freezing_point(p, S, bottom_ice_phase), deltap2+p2);
     theta2=arrayfun(@(T) eos.t_to_theta(p2, T, S, pref), T2);
     theta2=repmat(theta2,[nx,1])-273.15;
-    fprintf("Ocean top boundary layer PT: %.6f\n", theta1);
-    fprintf("Ocean bottom boundary layer PT: %.6f\n", theta2);
+    fprintf("Ocean top boundary layer PT: %.6f\n", mean(theta1));
+    fprintf("Ocean bottom boundary layer PT: %.6f\n", mean(theta2));
 
     % save out
     fname1='thetaBL_top.bin';fname2='thetaBL_bot.bin';

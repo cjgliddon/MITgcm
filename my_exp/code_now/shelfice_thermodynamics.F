@@ -5,6 +5,9 @@
 #ifdef ALLOW_CTRL
 # include "CTRL_OPTIONS.h"
 #endif
+#ifdef ALLOW_HPIMC
+# include "HPIMC_OPTIONS.h"
+#endif
 
 CBOP
 C     !ROUTINE: SHELFICE_THERMODYNAMICS
@@ -666,7 +669,7 @@ C           CJG: convert boundary-layer temp. to absolute temp.
              shelficeFreshWaterFlux(I,J,bi,bj) = -sigma
              shelficeHeatFlux(I,J,bi,bj) = ocQflxUB
              shelficeForcingT(i,j,bi,bj) 
-     &        = ocQflxUB/(HeatCapacity_Cp*mass2rUnit)
+     &        = ocQflxUB/(HeatCapacity_Cp)*mass2rUnit
              shelficeForcingS(i,j,bi,bj) = mass2rUnit*sBL*sigma
             ELSE
 #endif /* ALLOW_HPIMC */
