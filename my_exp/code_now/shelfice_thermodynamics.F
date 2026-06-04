@@ -5,8 +5,8 @@
 #ifdef ALLOW_CTRL
 # include "CTRL_OPTIONS.h"
 #endif
-#ifdef ALLOW_HPIMC
-# include "HPIMC_OPTIONS.h"
+#ifdef ALLOW_HPIMM
+# include "HPIMM_OPTIONS.h"
 #endif
 
 CBOP
@@ -56,9 +56,9 @@ C     === Global variables ===
 # include "W2_EXCH2_SIZE.h"
 # include "W2_EXCH2_TOPOLOGY.h"
 #endif /* ALLOW_EXCH2 */
-#ifdef ALLOW_HPIMC
-#include "HPIMC.h"
-#endif /* ALLOW_HPIMC */
+#ifdef ALLOW_HPIMM
+#include "HPIMM.h"
+#endif /* ALLOW_HPIMM */
 #include "SET_GRID.h"
 
 C     !INPUT/OUTPUT PARAMETERS:
@@ -134,14 +134,14 @@ C     CJG: dummy variables
       _RL tInSituLoc
       _RL ocQflxUB, Qcond, sigma, sBL, tBL
 
-#ifdef ALLOW_HPIMC
+#ifdef ALLOW_HPIMM
       _RL deltaT_surf
       _RL SFZ_PTMP
       EXTERNAL SFZ_PTMP
       _RL SFZ_TEMP
       EXTERNAL SFZ_TEMP
       PARAMETER db2Pa = 1.0 _d 04
-#endif /* ALLOW_HPIMC */
+#endif /* ALLOW_HPIMM */
 
 #ifdef ALLOW_GENTIM2D_CONTROL
       INTEGER iarr
@@ -236,13 +236,13 @@ C     where this value is part of the protocol
 #endif /* ALLOW_ISOMIP_TD */
 C     if we have the SEAFRZ EOS, we need a different FP parameterization
 C     for self-consistency with the other EOS params
-#ifdef ALLOW_HPIMC
+#ifdef ALLOW_HPIMM
       IF ( eosType .EQ. 'SEAFRZ' ) THEN
        a0 = -6.34807 _d -2
        b  = -1.02283 _d -3
        c0 =  1.06590 _d 0
       ENDIF
-#endif /* ALLOW_HPIMC */
+#endif /* ALLOW_HPIMM */
 
       DO bj = myByLo(myThid), myByHi(myThid)
        DO bi = myBxLo(myThid), myBxHi(myThid)
@@ -629,7 +629,7 @@ C     (Holland and Jenkins, 1999, eq.21)
             tInSituLoc = tLoc(I,J)
 C            PRINT *, "local temperature", tInSituLoc
 C     make correction for SeaFreeze EOS
-C#ifdef ALLOW_HPIMC
+C#ifdef ALLOW_HPIMM
 C            IF (eosType .eq. "SEAFRZ") THEN
 C             thetaFreeze = SFZ_PTMP(sLoc(I,J) ,thetaFreeze+273.15,
 C     &                          pLoc(I,J)*db2Pa, sfz_pRef) - 273.15
@@ -638,7 +638,7 @@ C            PRINT *, I,J,sLoc(I,J), pLoc(I,J), thetaFreeze
 C             tInSituLoc = SFZ_TEMP(sLoc(I,J), tLoc(I,J)+273.15,
 C     &                          pLoc(I,J)*db2Pa, sfz_pRef) - 273.15
 C            ENDIF
-C#endif /* ALLOW_HPIMC */
+C#endif /* ALLOW_HPIMM */
 
 C wykang: calculate heat conduction rate using log formula if
 C SHELFICEkappa < 0
@@ -652,14 +652,14 @@ c     note that dFac=0 for diffusive only ice
             fwflxFac    = 0. _d 0
             IF ( tInSituLoc .GT. thetaFreeze ) fwflxFac = dFac
 C     a few abbreviations
-#ifdef ALLOW_HPIMC
-            IF ( hpimc_prescribeTb ) THEN
+#ifdef ALLOW_HPIMM
+            IF ( hpimm_prescribeTb ) THEN
 C           CJG: with prescribed BL temp, the calc. is much simpler
              ocQflxUB = -rUnit2mass*shiTransCoeffT(i,j,bi,bj)
-     &        *HeatCapacity_Cp*(hpimc_shelfice_tBL(i,j,bi,bj) 
+     &        *HeatCapacity_Cp*(hpimm_shelfice_tBL(i,j,bi,bj) 
      &        - tInSituLoc)
 C           CJG: convert boundary-layer temp. to absolute temp.
-             tBL = SFZ_TEMP(sBL,hpimc_shelfice_tBL(i,j,bi,bj)+273.15,
+             tBL = SFZ_TEMP(sBL,hpimm_shelfice_tBL(i,j,bi,bj)+273.15,
      &                      pLoc(I,J)*db2Pa,sfz_pRef)-273.15
              Qcond = ABS(SHELFICEkappa) * LOG( tBL 
      &        / SHELFICEthetaSurface )/H_ice0
@@ -672,7 +672,7 @@ C           CJG: convert boundary-layer temp. to absolute temp.
      &        = ocQflxUB/(HeatCapacity_Cp)*mass2rUnit
              shelficeForcingS(i,j,bi,bj) = mass2rUnit*sBL*sigma
             ELSE
-#endif /* ALLOW_HPIMC */
+#endif /* ALLOW_HPIMM */
             eps1 = rUnit2mass*HeatCapacity_Cp
      &           *shiTransCoeffT(i,j,bi,bj)
             eps2 = rUnit2mass*SHELFICElatentHeat
@@ -871,9 +871,9 @@ C     &            *mass2rUnit*(tLoc(I,J) - theta(I,J,K,bi,bj))
      &           )*( saltFreeze - sLoc(I,J) )
      &           - rFWinBL*freshWaterFlux*mass2rUnit
      &            *( sLoc(I,J) - salt(I,J,K,bi,bj) )
-#ifdef ALLOW_HPIMC
+#ifdef ALLOW_HPIMM
             ENDIF
-#endif /* ALLOW_HPIMC */
+#endif /* ALLOW_HPIMM */
 C          
            ELSE
             shelfIceHeatFlux      (I,J,bi,bj) = 0. _d 0

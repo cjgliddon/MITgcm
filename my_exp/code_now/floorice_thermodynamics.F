@@ -1,4 +1,4 @@
-#include "HPIMC_OPTIONS.h"
+#include "HPIMM_OPTIONS.h"
 
 CBOP
 C
@@ -15,7 +15,7 @@ C     === Global variables ===
 #include "PARAMS.h"
 #include "GRID.h"
 #include "DYNVARS.h"
-#include "HPIMC.h"
+#include "HPIMM.h"
 C     !INPUT/OUTPUT PARAMETERS:
 C     === Routine arguments ===
 C     myIter :: iteration counter for this thread
@@ -80,14 +80,14 @@ C     flag for debugging
       checkBalances = .FALSE.
 
 
-      IF ( hpimc_addFloorice ) THEN      
+      IF ( hpimm_addFloorice ) THEN      
        DO bj = myByLo(myThid), myByHi(myThid)
         DO bi = myBxLo(myThid), myBxHi(myThid)
          DO j = 1,sNy
           DO i = 1,sNx
 C     Initialize forcing arrays with zeros
-           hpimc_flooriceForcingT(i,j,bi,bj) = 0. _d 0
-           hpimc_flooriceForcingS(i,j,bi,bj) = 0. _d 0 
+           hpimm_flooriceForcingT(i,j,bi,bj) = 0. _d 0
+           hpimm_flooriceForcingS(i,j,bi,bj) = 0. _d 0 
 C     Find grid cell where boundary layer is located
 C     For now, we use the lowest "wet cell" for a given column
            kLB = kLowC(i,j,bi,bj) 
@@ -119,19 +119,19 @@ C           PRINT *, tLoc, "Kelvin"
 C           PRINT *, "Local theta: ", theta(i,j,kLB,bi,bj)
 C           PRINT *, "sLoc: ", sLoc
 C           PRINT *, "pLoc (MPa): ", pLoc
-            IF (hpimc_prescribeTb) THEN
+            IF (hpimm_prescribeTb) THEN
              ocQflxLB = rhoLoc*gammaT_hpi*HeatCapacity_Cp* 
-     &        (hpimc_floorice_tBL(i,j,bi,bj) - thetaLoc) 
-             sigma = (ocQflxLb - hpimc_Qbot(i,j,bi,bj))/Lfus_hpi
+     &        (hpimm_floorice_tBL(i,j,bi,bj) - thetaLoc) 
+             sigma = (ocQflxLb - hpimm_Qbot(i,j,bi,bj))/Lfus_hpi
              sBL = rhoLoc*gammaS_hpi*sLoc/(rhoLoc*gammaS_hpi - sigma)
              ocSflxLB = sBL*sigma
 C           Diagnostics
-             hpimc_floorice_dmdt(i,j,bi,bj) = sigma
-             hpimc_floorice_Sflx(i,j,bi,bj) = -sigma*sBL
-             hpimc_floorice_Qflx(i,j,bi,bj) = ocQflxLB
+             hpimm_floorice_dmdt(i,j,bi,bj) = sigma
+             hpimm_floorice_Sflx(i,j,bi,bj) = -sigma*sBL
+             hpimm_floorice_Qflx(i,j,bi,bj) = ocQflxLB
             ELSE
 C            three-equations system
-             e1 = hpimc_Qbot(i,j,bi,bj)
+             e1 = hpimm_Qbot(i,j,bi,bj)
              e2 = rhoLoc*gammaT_hpi*HeatCapacity_Cp
              e3 = -rhoLoc*gammaS_hpi*Lfus_hpi
              e4 = e2*(tLoc-a1*pLoc-a3)
@@ -151,7 +151,7 @@ C              sBL = (-1*bqe - SQRT(bqe*bqe -4*aqe*cqe))/(2*aqe)
               sigma = 0. _d 0
              ENDIF
 
-C             hpimc_floorice_Qflx(i,j,bi,bj) = sigma
+C             hpimm_floorice_Qflx(i,j,bi,bj) = sigma
 C     &            * (HeatCapacity_Cp*(tLoc-tBL) - Lfus_hpi ) 
              ocSflxLB = sigma*sBL
              ocQflxLB = e2*(tBL-tLoc)
@@ -173,11 +173,11 @@ C     &            * (HeatCapacity_Cp*(tLoc-tBL) - Lfus_hpi )
               PRINT *, "Ocean state:"
               PRINT *, pLoc, sLoc, tLoc, rhoLoc
              ENDIF 
-             hpimc_floorice_dmdt(i,j,bi,bj) = sigma
-             hpimc_floorice_Sflx(i,j,bi,bj) = -sigma*sBL
-             hpimc_floorice_Qflx(i,j,bi,bj) = ocQflxLB
+             hpimm_floorice_dmdt(i,j,bi,bj) = sigma
+             hpimm_floorice_Sflx(i,j,bi,bj) = -sigma*sBL
+             hpimm_floorice_Qflx(i,j,bi,bj) = ocQflxLB
             ENDIF
-C            hpimc_floorice_dmdt(i,j,bi,bj) = 0. _d 0
+C            hpimm_floorice_dmdt(i,j,bi,bj) = 0. _d 0
 C            IF (sfz_fpParamType .eq. 'LINEAR') THEN
 C             tBL = sfz_FPcoef_l(1) + sfz_FPcoef_l(2)*pLoc 
 C     &           + sfz_FPcoef_l(3)*sLoc
@@ -186,17 +186,17 @@ C             PRINT *, tBL, "K"
 C            ENDIF
 C-      Heat flux into BL from ocean
 C            ocQflxLB = gammaTo_hpi*rhoLoc*HeatCapacity_Cp*(tBL-tLoc)
-C            hpimc_floorice_Qflx(i,j,bi,bj) =
+C            hpimm_floorice_Qflx(i,j,bi,bj) =
 C     &        - rho_hpi*cp_hpi*kappaT_hpi*dTdzBot
 C     &        + ocQflxLB
 C            ocSflxLB = 0. _d 0
-C            hpimc_floorice_Sflx(i,j,bi,bj) = 0. _d 0
+C            hpimm_floorice_Sflx(i,j,bi,bj) = 0. _d 0
                     
 C     calculate per-unit-depth T and S forcings; will be converted
 C     to actual tendencies in the floorice_forcing routines
-           hpimc_flooriceForcingT(i,j,bi,bj) =
+           hpimm_flooriceForcingT(i,j,bi,bj) =
      &                   ocQflxLB/(HeatCapacity_Cp*rhoLoc)
-           hpimc_flooriceForcingS(i,j,bi,bj) =
+           hpimm_flooriceForcingS(i,j,bi,bj) =
      &                   ocSflxLB/(rhoLoc)
            ENDIF
           ENDDO

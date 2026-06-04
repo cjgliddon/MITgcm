@@ -1,14 +1,14 @@
-#include "HPIMC_OPTIONS.h"
+#include "HPIMM_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: HPIMC_INIT_FIXED
+C !ROUTINE: HPIMM_INIT_FIXED
 
 C !INTERFACE:
-      SUBROUTINE HPIMC_INIT_FIXED( myThid )
+      SUBROUTINE HPIMM_INIT_FIXED( myThid )
 
 C     !DESCRIPTION:
-C     Initialize HPIMC variables that are kept fixed during the run.
+C     Initialize HPIMM variables that are kept fixed during the run.
 
 C     !USES:
       IMPLICIT NONE
@@ -16,7 +16,7 @@ C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
 #include "PARAMS.h"
-#include "HPIMC.h"
+#include "HPIMM.h"
 
 C     !INPUT/OUTPUT PARAMETERS:
 C     myThid ::  my Thread Id number
@@ -30,13 +30,13 @@ C      INTEGER iUnit
 
 #ifdef ALLOW_MNC
       IF (useMNC) THEN
-        CALL HPIMC_MNC_INIT( myThid )
+        CALL HPIMM_MNC_INIT( myThid )
       ENDIF
 #endif /* ALLOW_MNC */
 
 #ifdef ALLOW_DIAGNOSTICS
       IF ( useDiagnostics ) THEN
-        CALL HPIMC_DIAGNOSTICS_INIT( myThid )
+        CALL HPIMM_DIAGNOSTICS_INIT( myThid )
       ENDIF
 #endif
       
@@ -45,7 +45,7 @@ C     This updates an earlier version of the code where the Lfus values were
 C     estimated using formulas from Dunaeva et al. (2010); now Lfus is just
 C     the enthalpy difference between the ice phase and pure water at the
 C     specified P/T.
-      IF ( hpimc_flooriceType .eq. "III" ) THEN
+      IF ( hpimm_flooriceType .eq. "III" ) THEN
         sfz_FPcoef_l(1) =  3.4648 _d -2
         sfz_FPcoef_l(2) = -6.1843 _d -1
         sfz_FPcoef_l(3) =  2.4444 _d  2
@@ -53,7 +53,7 @@ C     assume p = 300 MPa, T = 255 K
         rho_hpi  = 1.165 _d 3
         cp_hpi   = 1.843 _d 3
         Lfus_hpi = 2.656 _d 5
-      ELSE IF ( hpimc_flooriceType .eq. "V  ") THEN
+      ELSE IF ( hpimm_flooriceType .eq. "V  ") THEN
         sfz_FPcoef_l(1) =  5.7906 _d -2
         sfz_FPcoef_l(2) = -8.0362 _d -2
         sfz_FPcoef_l(3) =  2.3781 _d  2
@@ -62,7 +62,7 @@ C     these are characteristic values for Callisto seafloor
         rho_hpi  = 1.252 _d 3
         cp_hpi   = 1.824 _d 3
         Lfus_hpi = 2.741 _d 5
-      ELSE IF ( hpimc_flooriceType .eq. "VI ") THEN
+      ELSE IF ( hpimm_flooriceType .eq. "VI ") THEN
         sfz_FPcoef_l(1) =  7.3012 _d -2
         sfz_FPcoef_l(2) = -8.9250 _d -1
         sfz_FPcoef_l(3) =  2.2884 _d  2
@@ -80,39 +80,39 @@ C       sfz_EOScoef_w(iCoef) = 0. _d 0
 C      ENDDO
 
 C     create bottom heat flux array
-      IF ( hpimc_addFloorice ) THEN      
+      IF ( hpimm_addFloorice ) THEN      
 C     instantiate bottom forcing array
-       IF (hpimc_QbotType .EQ. 0) THEN
+       IF (hpimm_QbotType .EQ. 0) THEN
         DO bj=myByLo(myThid), myByHi(myThid)
          DO bi=myBxLo(myThid), myBxHi(myThid)
           DO j = 1-OLy,sNy+OLy
            DO i = 1-OLx,sNx+OLx
-            hpimc_Qbot(i,j,bi,bj) = -rho_hpi*cp_hpi*kappaT_hpi*dTdz_hpi
+            hpimm_Qbot(i,j,bi,bj) = -rho_hpi*cp_hpi*kappaT_hpi*dTdz_hpi
            ENDDO
           ENDDO
          ENDDO
         ENDDO
        ENDIF
-      ELSE IF ((hpimc_QbotType .EQ. 1) .AND. (hpimc_QbotFile .NE. ' '))
+      ELSE IF ((hpimm_QbotType .EQ. 1) .AND. (hpimm_QbotFile .NE. ' '))
      &    THEN
-       CALL READ_FLD_XY_RL( hpimc_QbotFile, ' ', hpimc_Qbot, 0, myThid)
+       CALL READ_FLD_XY_RL( hpimm_QbotFile, ' ', hpimm_Qbot, 0, myThid)
       END IF
       
 C     Read in boundary-layer temperature fields if we're prescribing them
-      IF (hpimc_prescribeTb) THEN      
+      IF (hpimm_prescribeTb) THEN      
 C       DO j = 1-OLy,sNy+OLy
 C        DO i = 1-OLx,sNx+OLx
-C         hpimc_shelfice_tBL(i,j,bi,bj) = 0. _d 0
-C         hpimc_floorice_tBL(i,j,bi,bj) = 0. _d 0
+C         hpimm_shelfice_tBL(i,j,bi,bj) = 0. _d 0
+C         hpimm_floorice_tBL(i,j,bi,bj) = 0. _d 0
 C        ENDDO
 C       ENDDO       
-       IF (hpimc_TbtopFile .NE. ' ' ) THEN
-        CALL READ_FLD_XY_RL( hpimc_TbtopFile, ' ',
-     &                       hpimc_shelfice_tBL, 0, myThid)
+       IF (hpimm_TbtopFile .NE. ' ' ) THEN
+        CALL READ_FLD_XY_RL( hpimm_TbtopFile, ' ',
+     &                       hpimm_shelfice_tBL, 0, myThid)
        ENDIF
-       IF (hpimc_TbbotFile .NE. ' ' ) THEN
-        CALL READ_FLD_XY_RL( hpimc_TbbotFile, ' ', 
-     &                       hpimc_floorice_tBL, 0, myThid)
+       IF (hpimm_TbbotFile .NE. ' ' ) THEN
+        CALL READ_FLD_XY_RL( hpimm_TbbotFile, ' ', 
+     &                       hpimm_floorice_tBL, 0, myThid)
        ENDIF
       ENDIF
 

@@ -640,12 +640,12 @@ C--   needs to be called after the OASIS_INIT
       ENDIF
 #endif
 
-#ifdef ALLOW_HPIMC
-      IF (useHPIMC) THEN
+#ifdef ALLOW_HPIMM
+      IF (useHPIMM) THEN
 # ifdef ALLOW_DEBUG
-        IF (debugMode) CALL DEBUG_CALL('HPIMC_INIT_FIXED',myThid)
+        IF (debugMode) CALL DEBUG_CALL('HPIMM_INIT_FIXED',myThid)
 # endif
-        CALL HPIMC_INIT_FIXED(myThid)
+        CALL HPIMM_INIT_FIXED(myThid)
       ENDIF
 #endif
 

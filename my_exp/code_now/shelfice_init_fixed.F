@@ -122,130 +122,150 @@ c  salinity will drift away.
 c  moved to namelist
 c      Htide0=0.0289
 c       : relative mode amplitudes, Y20, Y40, Y22, Y42, Y44 respectively
-      cobl=cos(obliquity* deg2rad)
-      p2obl= (3.*cobl**2 - 1)/2.
-      p4obl= (35.*cobl**4.-30.*cobl**2 + 3)/8.
-      p6obl= (231.*cobl**6.-315.*cobl**4.+105.*cobl**2.-5.)/16.
-      HtideModes=(/0.250, 0.0825, -0.0834, -0.0546, -0.0562/)
-      IF (addmixbend) THEN
-        HmixbendModes=(/0.124,0.196,-0.0199,-0.0656,0.0132,0.0136/)
-      ELSE
-        HmixbendModes=(/0,0,0,0,0,0/)
-      ENDIF
-      if (uniHtide) then
-          HtideModes(1)=0.0
-          HtideModes(2)=0.0
-          HtideModes(3)=0.0
-          HtideModes(4)=0.0
-          HtideModes(5)=0.0
-      endif
+c      cobl=cos(obliquity* deg2rad)
+c      p2obl= (3.*cobl**2 - 1)/2.
+c      p4obl= (35.*cobl**4.-30.*cobl**2 + 3)/8.
+c      p6obl= (231.*cobl**6.-315.*cobl**4.+105.*cobl**2.-5.)/16.
+c      HtideModes=(/0.250, 0.0825, -0.0834, -0.0546, -0.0562/)
+c      IF (addmixbend) THEN
+c        HmixbendModes=(/0.124,0.196,-0.0199,-0.0656,0.0132,0.0136/)
+c      ELSE
+c        HmixbendModes=(/0,0,0,0,0,0/)
+c      ENDIF
+c      if (uniHtide) then
+c          HtideModes(1)=0.0
+c          HtideModes(2)=0.0
+c          HtideModes(3)=0.0
+c          HtideModes(4)=0.0
+c          HtideModes(5)=0.0
+c      endif
+c
+c      DO bj = myByLo(myThid), myByHi(myThid)
+c       DO bi = myBxLo(myThid), myBxHi(myThid)
+c        DO j = 1-OLy, sNy+OLy
+c         DO i = 1-OLx, sNx+OLx
+c          Htide(i,j,bi,bj) = Htide0 * sqrt(4.*PI) * ( Y00(i,j,bi,bj) 
+c     &         + HtideModes(1) * Y20(i,j,bi,bj)
+c     &         + HtideModes(2) * Y40(i,j,bi,bj)
+c     &         + HtideModes(3) * Y22(i,j,bi,bj)
+c     &         + HtideModes(4) * Y42(i,j,bi,bj)
+c     &         + HtideModes(5) * Y44(i,j,bi,bj) )
+c          print *, '!!! Htide=',Htide(i,j,bi,bj)
+c          Hmixbend(i,j,bi,bj) = Htide0 * sqrt(4.*PI)
+c     &       * ( HmixbendModes(1) * Y00(i,j,bi,bj) 
+c     &         + HmixbendModes(2) * Y20(i,j,bi,bj)
+c     &         + HmixbendModes(3) * Y40(i,j,bi,bj)
+c     &         + HmixbendModes(4) * Y22(i,j,bi,bj)
+c     &         + HmixbendModes(5) * Y42(i,j,bi,bj)
+c     &         + HmixbendModes(6) * Y44(i,j,bi,bj) )
+c          ENDDO
+c         ENDDO
+c        ENDDO
+c       ENDDO
+c
+c       IF (tiltheat .ne. 0.0) THEN
+c        DO bj = myByLo(myThid), myByHi(myThid)
+c         DO bi = myBxLo(myThid), myBxHi(myThid)
+c          DO j = 1-OLy, sNy+OLy
+c           DO i = 1-OLx, sNx+OLx
+c            Htide(i,j,bi,bj)=Htide(i,j,bi,bj)*
+c     &            (1-tiltheat*yC(i,j,bi,bj)/90.0)
+c           ENDDO
+c          ENDDO
+c         ENDDO
+c        ENDDO
+c       ENDIF
+c           
+c           
+c        thetaSurface_K=SHELFICEthetaSurface+273.15
+c        DO bj = myByLo(myThid), myByHi(myThid)
+c         DO bi = myBxLo(myThid), myBxHi(myThid)
+c          DO j = 1-OLy, sNy+OLy
+c           DO i = 1-OLx, sNx+OLx
+c             IF (meridionalTs .eq. 1) THEN 
+c                 lat=yC(i,j,bi,bj) * deg2rad
+c                 if (abs(yC(i,j,bi,bj))>90.0-obliquity) then
+c                     Ts=thetaSurface_K*(((PI/2.0-abs(lat))**2.0
+c     &                  +(obliquity*deg2rad)**2.0)/2.0)**0.125
+c                 else
+c                     Ts=thetaSurface_K*(cos(lat))**0.25
+c                 endif
+c             ELSEIF (meridionalTs .eq. 3) THEN
+c                 Ts=thetaSurface_K*(1.0-(5./8.)*p2obl*P2(i,j,bi,bj)
+c     &              -(9./64.)*p4obl*P4(i,j,bi,bj)
+c     &              -(65./1024.)*p6obl*P6(i,j,bi,bj))**0.25
+c             ELSE
+c                 Ts=thetaSurface_K
+c             ENDIF
+c            Hcond(i,j,bi,bj)=abs(SHELFICEkappa)*log(Ts
+c     &        /(273.15+tRef(1)))/H_ice0
+c           ENDDO
+c          ENDDO
+c         ENDDO
+c        ENDDO
+c           
+c       IF( HP1_ice .ne. 0.0 .OR. HP2_ice .ne. 0.0
+c     &  .OR. HP3_ice .ne. 0.0 .OR. HP4_ice .ne. 0.0 .OR. 
+c     &  HP5_ice .ne. 0.0 .OR. HP6_ice .ne.0.0) THEN
+c        DO bj = myByLo(myThid), myByHi(myThid)
+c         DO bi = myBxLo(myThid), myBxHi(myThid)
+c          DO j = 1-OLy, sNy+OLy
+c           DO i = 1-OLx, sNx+OLx
+c            Htide(i,j,bi,bj)=Htide(i,j,bi,bj)*(1+HP1_ice*P1(i,j,bi,bj)
+c     &            +HP2_ice*P2(i,j,bi,bj)+HP3_ice*P3(i,j,bi,bj)
+c     &            +HP4_ice*P4(i,j,bi,bj)+HP5_ice*P5(i,j,bi,bj)
+c     &            +HP6_ice*P6(i,j,bi,bj))**ptide_ext
+c
+c            IF (useHtidePsinHcond) THEN
+c             Hcond(i,j,bi,bj)=Hcond(i,j,bi,bj)*(1+HP1_ice*P1(i,j,bi,bj)
+c     &            +HP2_ice*P2(i,j,bi,bj)+HP3_ice*P3(i,j,bi,bj)
+c     &            +HP4_ice*P4(i,j,bi,bj)+HP5_ice*P5(i,j,bi,bj)
+c     &            +HP6_ice*P6(i,j,bi,bj))**pcond_ext
+c            ENDIF
+c           ENDDO
+c          ENDDO
+c         ENDDO
+c        ENDDO
+c       ENDIF
+c
+c       IF( HtP1 .ne. 0.0 .OR. HtP2 .ne. 0.0
+c     &  .OR. HtP3 .ne. 0.0 .OR. HtP4 .ne. 0.0 .OR. 
+c     &  HtP5 .ne. 0.0 .OR. HtP6 .ne.0.0) THEN
+c        DO bj = myByLo(myThid), myByHi(myThid)
+c         DO bi = myBxLo(myThid), myBxHi(myThid)
+c          DO j = 1-OLy, sNy+OLy
+c           DO i = 1-OLx, sNx+OLx
+c            Htide(i,j,bi,bj)=Htide(i,j,bi,bj) 
+c     &            +HtP1*P1(i,j,bi,bj)+HtP2*P2(i,j,bi,bj)
+c     &            +HtP3*P3(i,j,bi,bj)+HtP4*P4(i,j,bi,bj)
+c     &            +HtP5*P5(i,j,bi,bj)+HtP6*P6(i,j,bi,bj)
+c           ENDDO
+c          ENDDO
+c         ENDDO
+c        ENDDO
+c       ENDIF
 
-      DO bj = myByLo(myThid), myByHi(myThid)
-       DO bi = myBxLo(myThid), myBxHi(myThid)
-        DO j = 1-OLy, sNy+OLy
-         DO i = 1-OLx, sNx+OLx
-          Htide(i,j,bi,bj) = Htide0 * sqrt(4.*PI) * ( Y00(i,j,bi,bj) 
-     &         + HtideModes(1) * Y20(i,j,bi,bj)
-     &         + HtideModes(2) * Y40(i,j,bi,bj)
-     &         + HtideModes(3) * Y22(i,j,bi,bj)
-     &         + HtideModes(4) * Y42(i,j,bi,bj)
-     &         + HtideModes(5) * Y44(i,j,bi,bj) )
-          print *, '!!! Htide=',Htide(i,j,bi,bj)
-          Hmixbend(i,j,bi,bj) = Htide0 * sqrt(4.*PI)
-     &       * ( HmixbendModes(1) * Y00(i,j,bi,bj) 
-     &         + HmixbendModes(2) * Y20(i,j,bi,bj)
-     &         + HmixbendModes(3) * Y40(i,j,bi,bj)
-     &         + HmixbendModes(4) * Y22(i,j,bi,bj)
-     &         + HmixbendModes(5) * Y42(i,j,bi,bj)
-     &         + HmixbendModes(6) * Y44(i,j,bi,bj) )
+C-- wykang: end tidal heating    
+
+C-- CJG: simplification of conductive/tidal heating 
+       DO bj = myByLo(myThid), myByHi(myThid)
+        DO bi = myBxLo(myThid), myBxHi(myThid)
+         DO j = 1-OLy, sNy+OLy
+          DO i = 1-OLx, sNx+OLx
+           Hcond(i,j,bi,bj) = 0. _d 0
+           Htide(i,j,bi,bj) = 0. _d 0
           ENDDO
          ENDDO
         ENDDO
        ENDDO
-
-       IF (tiltheat .ne. 0.0) THEN
-        DO bj = myByLo(myThid), myByHi(myThid)
-         DO bi = myBxLo(myThid), myBxHi(myThid)
-          DO j = 1-OLy, sNy+OLy
-           DO i = 1-OLx, sNx+OLx
-            Htide(i,j,bi,bj)=Htide(i,j,bi,bj)*
-     &            (1-tiltheat*yC(i,j,bi,bj)/90.0)
-           ENDDO
-          ENDDO
-         ENDDO
-        ENDDO
+       IF (SHELFICEHcondFile .NE. ' ' ) THEN
+        CALL READ_FLD_XY_RL( SHELFICEHcondFile, ' ',
+     &                       Hcond, 0, myThid)
        ENDIF
-           
-           
-        thetaSurface_K=SHELFICEthetaSurface+273.15
-        DO bj = myByLo(myThid), myByHi(myThid)
-         DO bi = myBxLo(myThid), myBxHi(myThid)
-          DO j = 1-OLy, sNy+OLy
-           DO i = 1-OLx, sNx+OLx
-             IF (meridionalTs .eq. 1) THEN 
-                 lat=yC(i,j,bi,bj) * deg2rad
-                 if (abs(yC(i,j,bi,bj))>90.0-obliquity) then
-                     Ts=thetaSurface_K*(((PI/2.0-abs(lat))**2.0
-     &                  +(obliquity*deg2rad)**2.0)/2.0)**0.125
-                 else
-                     Ts=thetaSurface_K*(cos(lat))**0.25
-                 endif
-             ELSEIF (meridionalTs .eq. 3) THEN
-                 Ts=thetaSurface_K*(1.0-(5./8.)*p2obl*P2(i,j,bi,bj)
-     &              -(9./64.)*p4obl*P4(i,j,bi,bj)
-     &              -(65./1024.)*p6obl*P6(i,j,bi,bj))**0.25
-             ELSE
-                 Ts=thetaSurface_K
-             ENDIF
-            Hcond(i,j,bi,bj)=abs(SHELFICEkappa)*log(Ts
-     &        /(273.15+tRef(1)))/H_ice0
-           ENDDO
-          ENDDO
-         ENDDO
-        ENDDO
-           
-       IF( HP1_ice .ne. 0.0 .OR. HP2_ice .ne. 0.0
-     &  .OR. HP3_ice .ne. 0.0 .OR. HP4_ice .ne. 0.0 .OR. 
-     &  HP5_ice .ne. 0.0 .OR. HP6_ice .ne.0.0) THEN
-        DO bj = myByLo(myThid), myByHi(myThid)
-         DO bi = myBxLo(myThid), myBxHi(myThid)
-          DO j = 1-OLy, sNy+OLy
-           DO i = 1-OLx, sNx+OLx
-            Htide(i,j,bi,bj)=Htide(i,j,bi,bj)*(1+HP1_ice*P1(i,j,bi,bj)
-     &            +HP2_ice*P2(i,j,bi,bj)+HP3_ice*P3(i,j,bi,bj)
-     &            +HP4_ice*P4(i,j,bi,bj)+HP5_ice*P5(i,j,bi,bj)
-     &            +HP6_ice*P6(i,j,bi,bj))**ptide_ext
-
-            IF (useHtidePsinHcond) THEN
-             Hcond(i,j,bi,bj)=Hcond(i,j,bi,bj)*(1+HP1_ice*P1(i,j,bi,bj)
-     &            +HP2_ice*P2(i,j,bi,bj)+HP3_ice*P3(i,j,bi,bj)
-     &            +HP4_ice*P4(i,j,bi,bj)+HP5_ice*P5(i,j,bi,bj)
-     &            +HP6_ice*P6(i,j,bi,bj))**pcond_ext
-            ENDIF
-           ENDDO
-          ENDDO
-         ENDDO
-        ENDDO
+       IF (SHELFICEHtideFile .NE. ' ' ) THEN
+        CALL READ_FLD_XY_RL( SHELFICEHtideFile, ' ', 
+     &                       Htide, 0, myThid)
        ENDIF
-
-       IF( HtP1 .ne. 0.0 .OR. HtP2 .ne. 0.0
-     &  .OR. HtP3 .ne. 0.0 .OR. HtP4 .ne. 0.0 .OR. 
-     &  HtP5 .ne. 0.0 .OR. HtP6 .ne.0.0) THEN
-        DO bj = myByLo(myThid), myByHi(myThid)
-         DO bi = myBxLo(myThid), myBxHi(myThid)
-          DO j = 1-OLy, sNy+OLy
-           DO i = 1-OLx, sNx+OLx
-            Htide(i,j,bi,bj)=Htide(i,j,bi,bj) 
-     &            +HtP1*P1(i,j,bi,bj)+HtP2*P2(i,j,bi,bj)
-     &            +HtP3*P3(i,j,bi,bj)+HtP4*P4(i,j,bi,bj)
-     &            +HtP5*P5(i,j,bi,bj)+HtP6*P6(i,j,bi,bj)
-           ENDDO
-          ENDDO
-         ENDDO
-        ENDDO
-       ENDIF
-
-C-- wykang: end tidal heating      
 
         
 

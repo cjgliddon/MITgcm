@@ -23,9 +23,16 @@ export CODEDIR=$5 	# where are your code modifications?
 export NCPUS=$NCORES
 export NCPU_PERNODE=32
 export NNODES=$(((NCORES-1) / NCPU_PERNODE+1))
-export NZ=`echo $RESOL | grep -o -E '[0-9]+' | head -1`
-export NX=`echo $RESOL | grep -o -E '[0-9]+' | head -2 | tail -1`
-export RESOLUTION=`echo $RESOL | grep -o -E '[A-Za-z]+' | tail -1``echo $RESOL | grep -o -E '[0-9]+' | tail -1`
+if [[ $RESOL =~ ^([A-Za-z]+)\(([0-9]+),([0-9]+),([0-9]+)\)$ ]]; then
+    STRING="${BASH_MATCH[1]}"
+    export NZ="${BASH_MATCH[2]}"
+    export NY="${BASH_MATCH[3]}"
+    export NX="${BASH_MATCH[4]}"
+    export RESOLUTION="${STRING}${NX}x${NY}y"
+else
+    echo "Error: RESOL format not recognized (expected: STRING(nz,ny,nx))"
+    exit 1
+fi
 export CURRENTITER=0
 export EACHITER=$((2592000)) # 103680 iter = 360 day, if timestep: 300s
 export TOTALITER=$((EACHITER*2))
@@ -58,7 +65,7 @@ if [[ $TODO == *"compile"* ]]; then
     #cp $sizefile ../${CODEDIR}/SIZE.h
     cp ../${CODEDIR}/SIZE.h $sizefile
     sed -i "s/_NR_/$NZ/g" ../${CODEDIR}/SIZE.h
-    sed -i "s/_NX_/$NX/g" ../${CODEDIR}/SIZE.h
+#    sed -i "s/_NX_/$NX/g" ../${CODEDIR}/SIZE.h
     cp -r ../${CODEDIR} ./code
     cp -r ../input_now ./input
     cp ${MyExp}/grids/grid${RESOLUTION}/* ./input/

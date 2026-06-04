@@ -730,14 +730,14 @@ c     ENDIF
 #endif /* ALLOW_SHELFICE */
 
 C     Additions for icy ocean world floor ice modeling (CJG)
-C #ifdef ALLOW_HPIMC
+C #ifdef ALLOW_HPIMM
 C      IF ( useSeaFrz )
 C     &      CALL FLOORICE_FORCING_T(
             CALL FLOORICE_FORCING_T(
      U                   gT_arr,
      I                   iMin,iMax,jMin,jMax, k, bi,bj,
      I                   myTime, myIter, myThid )
-C #endif /* ALLOW_HPIMC */
+C #endif /* ALLOW_HPIMM */
 
 #ifdef ALLOW_ICEFRONT
       IF ( useICEFRONT )
@@ -972,14 +972,14 @@ C     Ocean: Add salinity surface forcing (e.g., fresh-water) in surface level
 #endif /* ALLOW_SHELFICE */
 
 C     Additions for icy ocean world floor ice modeling (CJG)
-C #ifdef ALLOW_HPIMC
+C #ifdef ALLOW_HPIMM
 C      IF ( useSeaFrz )
 C     &      CALL FLOORICE_FORCING_S(
             CALL FLOORICE_FORCING_S(
      U                   gS_arr,
      I                   iMin,iMax,jMin,jMax, k, bi,bj,
      I                   myTime, myIter, myThid )
-C #endif /* ALLOW_HPIMC */
+C #endif /* ALLOW_HPIMM */
 
 #ifdef ALLOW_ICEFRONT
       IF ( useICEFRONT )

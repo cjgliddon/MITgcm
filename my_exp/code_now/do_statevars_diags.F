@@ -115,11 +115,11 @@ C                    and stagger/synchronous TimeStep
        ENDIF
 #endif /* ALLOW_LAND */
 
-#ifdef ALLOW_HPIMC
-       IF (seqFlag.EQ.0 .AND. useHPIMC ) THEN
-         CALL HPIMC_DIAGNOSTICS_STATE( myTime, myIter, myThid)
+#ifdef ALLOW_HPIMM
+       IF (seqFlag.EQ.0 .AND. useHPIMM ) THEN
+         CALL HPIMM_DIAGNOSTICS_STATE( myTime, myIter, myThid)
        ENDIF
-#endif /* ALLOW_HPIMC */
+#endif /* ALLOW_HPIMM */
 
 #ifdef ALLOW_MYPACKAGE
        IF ( seqFlag.EQ.0 .AND. useMYPACKAGE ) THEN

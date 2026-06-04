@@ -1,14 +1,14 @@
-#include "HPIMC_OPTIONS.h"
+#include "HPIMM_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: HPIMC_DIAGNOSTICS_INIT
+C !ROUTINE: HPIMM_DIAGNOSTICS_INIT
 
 C !INTERFACE:
-      SUBROUTINE HPIMC_DIAGNOSTICS_INIT( myThid )
+      SUBROUTINE HPIMM_DIAGNOSTICS_INIT( myThid )
 
 C     !DESCRIPTION:
-C     Initialize list of all available diagnostics for the HPIMC package.
+C     Initialize list of all available diagnostics for the HPIMM package.
 
 C     !USES:
       IMPLICIT NONE
@@ -16,7 +16,7 @@ C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
 #include "PARAMS.h"
-#include "HPIMC.h"
+#include "HPIMM.h"
 
 C     !INPUT/OUTPUT PARAMETERS:
 C     myThid ::  my Thread Id number
@@ -72,7 +72,7 @@ C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
 C--     an example of how to set "free levels option" diagnostics
 C        diagName  = 'HpiLev3'
-C        diagTitle = '3-levels field for package HPIMC'
+C        diagTitle = '3-levels field for package HPIMM'
 C        diagUnits = 'unit            '
 C        diagCode  = 'SM      MX      '
 C        CALL DIAGNOSTICS_ADDTOLIST( diagNum,

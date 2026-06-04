@@ -416,9 +416,9 @@ C--   if useMYPACKAGE=T, set mypackage parameters; otherwise just return
       CALL MYPACKAGE_READPARMS( myThid )
 #endif
 
-#ifdef ALLOW_HPIMC
-C--   if useHPIMC=T, set HPIMC parameters; otherwise just return
-      CALL HPIMC_READPARMS( myThid )
+#ifdef ALLOW_HPIMM
+C--   if useHPIMM=T, set HPIMM parameters; otherwise just return
+      CALL HPIMM_READPARMS( myThid )
 #endif
 
      

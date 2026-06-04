@@ -44,9 +44,9 @@ func_replace_string('data','rSphere=',sprintf('rSphere=%f,',a))
 func_replace_string('data','eosType',sprintf('eosType=%s,',eosType))
 if boundaryTopo==0
     simpleBathy=1;      % override
-    func_replace_string('data.hpimc','hpimc_prescribeTb',sprintf('eosType=.TRUE.,'))
+    func_replace_string('data.hpimm','hpimm_prescribeTb',sprintf('eosType=.TRUE.,'))
 else
-    func_replace_string('data.hpimc','hpimc_prescribeTb',sprintf('eosType=.FALSE.,'))
+    func_replace_string('data.hpimm','hpimm_prescribeTb',sprintf('eosType=.FALSE.,'))
 end
 
 

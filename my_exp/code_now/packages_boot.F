@@ -95,7 +95,7 @@ C     data.pkg namelists
      &          useRunClock,
      &          useEMBED_FILES,
      &          useMYPACKAGE,
-     &          useHPIMC
+     &          useHPIMM
 
       _BEGIN_MASTER(myThid)
 
@@ -161,7 +161,7 @@ c     useGAD          =.FALSE.
       useRunClock     =.FALSE.
       useEMBED_FILES  =.FALSE.
       useMYPACKAGE    =.FALSE.
-      useHPIMC       =.FALSE.
+      useHPIMM       =.FALSE.
 
 C-    Adjust default to account for pkgs without run-time On/Off switch
 #ifdef ALLOW_AUTODIFF
@@ -411,8 +411,8 @@ C----- pkgs with a standard "usePKG" On/Off switch in "data.pkg":
 #ifdef ALLOW_MYPACKAGE
       CALL PACKAGES_PRINT_MSG( useMYPACKAGE,  'MYPACKAGE',   ' ' )
 #endif
-#ifdef ALLOW_HPIMC
-      CALL PACKAGES_PRINT_MSG( useHPIMC,     'HPIMC',      ' ' )
+#ifdef ALLOW_HPIMM
+      CALL PACKAGES_PRINT_MSG( useHPIMM,     'HPIMM',      ' ' )
 #endif
 
 C----- pkgs without standard "usePKG" in "data.pkg":

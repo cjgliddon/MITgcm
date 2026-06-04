@@ -19,6 +19,10 @@ C     SHELFICEmassFile         :: name of shelfice Mass file
 C     SHELFICEloadAnomalyFile  :: name of shelfice load anomaly file
 C     SHELFICEMassDynTendFile  :: file name for other mass tendency
 C                                 (e.g. dynamics)
+C--   New input files (CJG)
+C     SHELFICEHcondFile        :: File containing conductive heating (W/m^2)
+C     SHELFICEHtideFile        :: File containing ice tidal heating (W/m^2)
+C--
 C     useISOMIPTD              :: use simple ISOMIP thermodynamics, def: F
 C     SHELFICEconserve         :: use conservative form of H&O-thermodynamics
 C                                 following Jenkins et al. (2001, JPO), def: F
@@ -291,12 +295,16 @@ C     wykang: add new namelist variable
      &     SHELFICEmassFile,
      &     SHELFICEtopoFile,
      &     SHELFICEMassDynTendFile,
-     &     SHELFICETransCoeffTFile
+     &     SHELFICETransCoeffTFile,
+     &     SHELFICEHcondFile,
+     &     SHELFICEHtideFile
       CHARACTER*(MAX_LEN_FNAM) SHELFICEloadAnomalyFile
       CHARACTER*(MAX_LEN_FNAM) SHELFICEmassFile
       CHARACTER*(MAX_LEN_FNAM) SHELFICEtopoFile
       CHARACTER*(MAX_LEN_FNAM) SHELFICEMassDynTendFile
       CHARACTER*(MAX_LEN_FNAM) SHELFICETransCoeffTFile
+      CHARACTER*(MAX_LEN_FNAM) SHELFICEHcondFile
+      CHARACTER*(MAX_LEN_FNAM) SHELFICEHtideFile
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 

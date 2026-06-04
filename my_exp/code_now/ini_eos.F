@@ -28,8 +28,8 @@ C     == Global variables ==
 #include "PARAMS.h"
 #include "EOS.h"
 
-#ifdef ALLOW_HPIMC
-#include "HPIMC.h"
+#ifdef ALLOW_HPIMM
+#include "HPIMM.h"
 #endif 
 
 C     !INPUT/OUTPUT PARAMETERS:
@@ -361,7 +361,7 @@ C     5. secant bulk modulus K of sea water at p
        TPD01 =  3.830289486850898 _d -3
        TPD02 =  1.247811760368034 _d -6
 
-#ifdef ALLOW_HPIMC       
+#ifdef ALLOW_HPIMM       
       ELSEIF( equationOfState .EQ. 'SEAFRZ' ) THEN
        iUnit=100
 C       OPEN(Unit=iUnit, FILE=sfz_EOSFile, STATUS='OLD',
@@ -441,7 +441,7 @@ C       print *, sfz_EOSnorm_w
        sfz_EOScoef_w(3, 3, 1) =   +7.440086 _d +01
        sfz_EOScoef_w(3, 3, 2) =   -7.579247 _d +01
        sfz_EOScoef_w(3, 3, 3) =   +2.949727 _d +01
-#endif /* ALLOW_HPIMC */
+#endif /* ALLOW_HPIMM */
               
       ELSEIF( equationOfState .EQ. 'IDEALG' ) THEN
 

@@ -3,6 +3,6 @@
  useDiagnostics=.TRUE.,
  useMNC=.FALSE.,
  useSHELFICE=.TRUE.,
- useHPIMC=.TRUE.,
+ useHPIMM=.TRUE.,
  &
   

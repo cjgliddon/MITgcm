@@ -550,11 +550,11 @@ C--   Initialise the 2-Way Nesting packages variables
       ENDIF
 #endif /* ALLOW_MYPACKAGE */
 
-#ifdef ALLOW_HPIMC
-      IF ( useHPIMC ) THEN
-        CALL HPIMC_INIT_VARIA( myThid )
+#ifdef ALLOW_HPIMM
+      IF ( useHPIMM ) THEN
+        CALL HPIMM_INIT_VARIA( myThid )
       ENDIF
-#endif /* ALLOW_HPIMC */
+#endif /* ALLOW_HPIMM */
 
 
 
