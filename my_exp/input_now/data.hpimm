@@ -4,9 +4,10 @@
 
 &HPIMM_PARM01
 dTdz_hpi=-1.0e-4,
-hpimm_flooriceType='V',
+hpimm_flooriceType=VI
 hpimm_QbotType=0,
 hpimm_prescribeTb=.FALSE.,
 hpimm_TbtopFile='',
 hpimm_TbbotFile='',
+hpimm_addFloorice=.TRUE.
 &

@@ -33,7 +33,7 @@
                    'THETASQ ','UVELSQ  ',
                    'UV_VEL_Z','WU_VEL  ',
    fileName(2) = 'dynDiag',
-  frequency(2) = -31104000.,
+  frequency(2) = 31104000.,
 
   fields(1:2,3)  = 'DRHODR  ','RHOAnoma',
 #                   'GM_PsiY ','GM_Kvy  ','GM_Kvz  ','GM_Kwy  ','GM_Kwz  ',
@@ -60,9 +60,9 @@ frequency(5)=31104000.,
    fileName(6) = 'momDiag',
   frequency(6) = 31104000.,
 
-fields(1:3,7) = 'SfzLQflx', 'SfzLSflx', 'SfzLdmdt',
-fileName(7) = 'sfzDiag',
-frequency(7)=31104000.,
+fields(1:4,7) = 'HpiLQflx', 'HpiLSflx', 'HpiLdmdt', 'HpiLBtmp',
+fileName(7) = 'hpimc_Diag',
+frequency(7)=86400.,
 
 
  &

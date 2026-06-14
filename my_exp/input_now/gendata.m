@@ -72,8 +72,8 @@ Vini_field=0;		   % 0: does nothing; 2: read from file
 
 % model configuration flags
 simpleTopo=true;       % true: topography assumed to vary as cos^2 of latitude; false: manually prescribed topography (overrides del_ht, del_hb)
-addFloorice=false;     % false: no floor ice; true: high-pressure floor ice
-bottom_ice_phase="V";  % reference bottom ice phase
+addFloorice=true;      % false: no floor ice; true: high-pressure floor ice
+bottom_ice_phase="VI";  % reference bottom ice phase
 % The following flags control whether tidal heating is included in the model
 % and, if it is, how it's handled. 
 % > useShellTides=0: no tidal heating
@@ -83,7 +83,7 @@ useShellTides=0;
 useOceanTides=0;       % 0/1: excludes/includes ocean tidal heating (TODO: MUST BE SET TO ZERO FOR NOW)
 Htide0_portion=0;      % fraction of heat flux into ice shell due to tidal heating (used only if useShellTides=2)
 prescribeHcore=false;  % false: core heating assumed uniform with latitude; true: specify pattern manually
-prescribe_delv_theta=true;  % false: delv_theta assumed fixed; true: delv_theta calculated iteratively from balance conditions
+prescribe_delv_theta=false;  % false: delv_theta assumed fixed; true: delv_theta calculated iteratively from balance conditions
 
 % model grid: number of cells, spacing
 nx = 96; ny = 96;
@@ -109,12 +109,6 @@ clat = cosd(yc);                       % cos(latitude)
 slat = sind(yc);                       % sin(latitude)
 c2lon = cosd(2.*xc);
 c4lon = cosd(4.*xc);
-
-% Vertical layer thicknesses [m].  Currently 86 uniform 5-km layers,
-% summing to 430 km = Htot.  Two commented examples above show how you
-% would build a graded grid (thinner near the ice, thicker below).
-dh = 5.0e3*ones(1,86);
-hf = [0, cumsum(dh)];                  % depths of layer interfaces (top->bot)
 
 % Legendre polynomials P_n(sin(lat)) -- handy for projecting fields onto
 % standard spherical-harmonic-like meridional modes.
@@ -157,6 +151,7 @@ end
 hice  = hice0 + sum(hice_Pc.*Ps);
 bathy = sum(bathy_Pc.*Ps);      % this is just anomaly from the mean ocean depth for now
 
+
 %% freezing point and Hcond calculation
 
 % First build the surface temperature Ts(lat).
@@ -185,6 +180,8 @@ end
 p1=(rho_Ih*G*hice0)/(a^2-a*hice0)*(M+2*pi*rho_Ih*a^2*hice0-2*pi*rho_Ih*a*hice0^2/3);
 T1=eos.eval_freezing_point(p1,S0,"Ih");
 theta1=eos.t_to_theta(p1,T1,S0,pref);    % potential temperature
+% gravity in upper layer; used as an approximate value in the delv_theta calculation later scaling
+g_top = p1/(rho_Ih*hice0);
 
 % calculate conductive heat flux profile
 pcond=-1.0;
@@ -198,7 +195,7 @@ Hcond0 = sum(Hcond.*clat)/sum(clat);    % mean heat flux
 
 if useShellTides==0
     Htide0 = 0;
-elseif useShellTides>1
+elseif useShellTides>0
     % Spherical-harmonic coefficients of the tidal-dissipation pattern in the
     % shell (relative to the Y00 mode), from Beuthe (2019) for Enceladus
     % parameters.  Order is [Y20 Y40 Y22 Y42 Y44].
@@ -220,7 +217,6 @@ elseif useShellTides>1
         Htidemean = 0.0; 
     end
 
-    ptide=-2.0;
     % Membrane-mode dissipation pattern.  The sqrt(4*pi) renormalises so the
     % global mean of the shape is 1 when only the Y00 term is present.
     Htideprof = sqrt(4*pi).*( Y00 + Htidemode(1).*Y20 + Htidemode(2).*Y40 + ...
@@ -257,54 +253,60 @@ function poc = calc_ocean_pres(r, rho_oc, G, a, hice0, M, rho_Ih, p1)
     poc = poc + p1;
 end
 
-if Tini_field==0 || Tini_field==1
-    % iteratively estimate rho_oc and H_oc
-    H_iters = 5;
-    rho_iters = 3;
-    rho_oci = 1100.0;
-    hoc_i   = 60.0e+03;
-    trap_res = 31;
+if addFloorice
+    if Tini_field==0 || Tini_field==1
+        % iteratively estimate rho_oc and H_oc
+        H_iters = 5;
+        rho_iters = 3;
+        rho_oci = 1100.0;
+        hoc_i   = 60.0e+03;
+        trap_res = 31;
 
-    for hi = 1:H_iters
-        r_coords = linspace(a - hice0 - hoc_i, a - hice0, trap_res);  % Use hoc_i, not Hoc
-        rho_p = @(p) eos.rho_pThetaS(p, theta1, S0, pref);
-        
-        for rhoi = 1:rho_iters
-            % Pass parameters explicitly
-            pres_r = @(r) calc_ocean_pres(r, rho_oci, G, a, hice0, M, rho_Ih, p1);
-            integrand = zeros(size(r_coords));
-            for idx = 1:length(r_coords)
-                integrand(idx) = rho_p(pres_r(r_coords(idx)));
+        for hi = 1:H_iters
+            r_coords = linspace(a - hice0 - hoc_i, a - hice0, trap_res);  % Use hoc_i, not Hoc
+            rho_p = @(p) eos.rho_pThetaS(p, theta1, S0, pref);
+            
+            for rhoi = 1:rho_iters
+                % Pass parameters explicitly
+                pres_r = @(r) calc_ocean_pres(r, rho_oci, G, a, hice0, M, rho_Ih, p1);
+                integrand = zeros(size(r_coords));
+                for idx = 1:length(r_coords)
+                    integrand(idx) = rho_p(pres_r(r_coords(idx)));
+                end
+                % Use hoc_i consistently
+                rho_oci = trapz(r_coords, integrand) / hoc_i;
             end
-            % Use hoc_i consistently
-            rho_oci = trapz(r_coords, integrand) / hoc_i;
-        end
-        ac = a - hice0 - hoc_i;
+            ac = a - hice0 - hoc_i;
+            rho_cr = (1/ac^3) * (3*M/4/pi - rho_oci*((ac + hoc_i)^3 - ac^3) - rho_Ih*(a^3 - (ac + hoc_i)^3));
 
-        delta_theta = @(p) eos.t_to_theta(p, eos.eval_freezing_point(p, S0, bottom_ice_phase), S0, pref) - delv_theta - theta1;
-        p_guess = calc_ocean_pres(a - hice0 - hoc_i, rho_oci, G, a, hice0, M, rho_Ih, p1);
-        fprintf('Pressure guess %.6f yields freezing point:\n', p_guess);
-        fprintf('%.6f\n', theta1 + delv_theta + delta_theta(p_guess));
-        
-        % Use single initial guess (fzero will use secant/quasi-Newton methods)
-        p_freeze = fzero(delta_theta, p_guess);
-        % fprintf('Freezing pressure: %.6f\n', p_freeze);
-        
-        % invert pres_func to find the freezing radius
-        delta_pres = @(r) calc_ocean_pres(r, rho_oci, G, a, hice0, M, rho_Ih, p1) - p_freeze;
-        r_guess1 = a - hice0;
-        r_guess2 = 0.1 * a;
-        hoc_i = a - fzero(delta_pres, [r_guess1, r_guess2]) - hice0;
-        % fprintf('Ocean depth after %d iterations: %.6f\n', mi, hoc_i);
-        if ~prescribe_delv_theta
-            % recalculates delv_theta using Gastine et al. (2015) scaling
-            % TODO: include multiple scalings for different rotation rates
-	        delv_theta=sqrt(nu_wr*(ac/(a-hice0))*power/(alpha_T*rho_oci*cpw*g_top*hoc_i^2));
+            delta_theta = @(p) eos.t_to_theta(p, eos.eval_freezing_point(p, S0, bottom_ice_phase), S0, pref) - delv_theta - theta1;
+            p_guess = calc_ocean_pres(a - hice0 - hoc_i, rho_oci, G, a, hice0, M, rho_Ih, p1);
+            fprintf('Pressure guess %.6f yields freezing point:\n', p_guess);
+            fprintf('%.6f\n', theta1 + delv_theta + delta_theta(p_guess));
+            
+            % Use single initial guess (fzero will use secant/quasi-Newton methods)
+            p_freeze = fzero(delta_theta, p_guess);
+            % fprintf('Freezing pressure: %.6f\n', p_freeze);
+            
+            % invert pres_func to find the freezing radius
+            delta_pres = @(r) calc_ocean_pres(r, rho_oci, G, a, hice0, M, rho_Ih, p1) - p_freeze;
+            r_guess1 = a - hice0;
+            r_guess2 = 0.1 * a;
+            hoc_i = a - fzero(delta_pres, [r_guess1, r_guess2]) - hice0;
+            % fprintf('Ocean depth after %d iterations: %.6f\n', mi, hoc_i);
+            if ~prescribe_delv_theta
+                % recalculates delv_theta using Gastine et al. (2015) scaling
+                % TODO: include multiple scalings for different rotation rates
+                delv_theta=sqrt(nu_wr*(ac/(a-hice0))*power/(alpha_T*rho_oci*cpw*g_top*hoc_i^2));
+            end
+            fprintf('Superadiabatic temperature gradient (K): %.6f\n',delv_theta)
         end
-        fprintf('Superadiabatic temperature gradient (K): %.6f\n',delv_theta)
     end
+    hoc0 = hoc_i; rho0 = rho_oci; p2=p_freeze;
+    else
+        % TODO: elaborate on this case
+        hoc0 = 100.0e+03;
 end
-hoc0 = hoc_i; rho0 = rho_oci; p2=p_freeze;
 
 % correct core heating mean value for change in surface area from ocean top to bottom
 Hcore0 = Hcore0_inter*(a - hice0)^2/(a - hice0 - hoc0)^2;
@@ -361,16 +363,16 @@ else
     dz = [transition; flipud(transition)];
 end
 dh = transpose([hice0; dz]);
-fprintf("dh profile (km): %.6f\n", dh/1.0e+3);
+%fprintf("dh profile (km): %.6f\n", dh/1.0e+3);
 hf = [0,cumsum(dh)];
 hc=(hf(2:end)+hf(1:end-1))./2;  % centered depth coordinates
 rc=a-hc;
 nr=length(hc);
+fprintf("Grid size in vertical: %i\n", nr);
 
 %% gravity profile
 
 g0 = G*M/a^2;
-g_top = p1/(rho_Ih*dh(1));
 g = [g_top, 4*G*pi/3.*((rho_cr - rho0).*ac^3./rc(2:nr).^2 + rho0.*rc(2:nr))];
 
 %% -- ice flow (creep) coefficient ----------------------------------------
@@ -392,7 +394,7 @@ ice_flow0 = 2*((rho0-rho_Ih)*rho_Ih/rho0*g0)*hice0^3 ...
                   .* ((log(T1./Tp)))./Tp./T.*(Tp<=T), ...
                   Ts0, T1, Ts0, T1 );
 
-SHI_iceflow = ice_flow0 / Hice0^3 / rhoice^3;
+SHI_iceflow = ice_flow0 / hice0^3 / rho_Ih^3;
 
 % TODO: adapt this so the *full* ice flow calculation is in gendata.m 
 
@@ -412,6 +414,11 @@ end
 % salinity (TODO)
 % velocity (TODO)
 
+%% backup data files
+system('cp -f data data_back');
+system('cp -f data.shelfice data.shelfice_back');
+system('cp -f data.hpimm data.hpimm_back');
+
 %% write to namelists
 
 eosType='SEAFRZ';
@@ -425,11 +432,45 @@ func_replace_string('data','diffKrT=',sprintf('diffKrT=%f,',kappa_wr))
 func_replace_string('data','tAlpha=',sprintf('tAlpha=%f,',alpha_T))
 func_replace_string('data','rhoConst=',sprintf('rhoConst=%f,',rho0));
 func_replace_string('data','gravity=',sprintf('gravity=%f,',g0));
+func_replace_string('data', 'delX=',['delX=',sprintf('%i',nx),'*',sprintf('%f',dx),','])
+func_replace_string('data', 'delY=',['delY=',sprintf('%i',ny),'*',sprintf('%f',dy),','])
+
+% The next bit of code overwrites the "delR" namelist variable (vertical grid spacing)
+% Convert to row vector and find where values change
+dh_vec = dh(:)';
+changes = [true, diff(dh_vec) ~= 0, true];
+
+% Get indices where changes occur
+change_indices = find(changes);
+
+% Build formatted output
+output_parts = {};
+for i = 1:length(change_indices)-1
+    start_idx = change_indices(i);
+    end_idx = change_indices(i+1) - 1;
+    count = end_idx - start_idx + 1;
+    value = dh_vec(start_idx);
+    
+    if count == 1
+        output_parts{end+1} = sprintf('%f', value);
+    else
+        output_parts{end+1} = sprintf('%d*%f', count, value);
+    end
+end
+
+output_str = strjoin(output_parts, ',');
+
+func_replace_string('data', 'delR=',['delR=',output_str,','])
+
 
 func_replace_string('data.shelfice','meridionalTs',sprintf('meridionalTs=%d,',meridionalTs))
 func_replace_string('data.shelfice','SHI_iceflow', ['SHI_iceflow=',sprintf('%g',SHI_iceflow),','])
 
-func_replace_string('data.hpimm', 'hpimm_addFloorice=', sprintf('hpimm_addFloorice=.%s.', addFloorice?"TRUE":"FALSE"))
+if addFloorice
+    func_replace_string('data.hpimm', 'hpimm_addFloorice=', 'hpimm_addFloorice=.TRUE.')
+else
+    func_replace_string('data.hpimm', 'hpimm_addFloorice=', 'hpimm_addFloorice=.FALSE.')
+end
 func_replace_string('data.hpimm', 'hpimm_flooriceType=', sprintf('hpimm_flooriceType=%s', bottom_ice_phase))
 
 
@@ -459,7 +500,8 @@ fclose(fid);
 func_replace_string('data.shelfice','SHELFICEtopoFile', ['SHELFICEtopoFile=''',fname,''','])
 
 bathy_z = repmat(bathy_z, [nx, 1]);
-fname=['my_bathy_',sprintf('%3d', -min(bathy_z)/1.0e+3),'km.bin'] ;
+fname=['my_bathy_',sprintf('%3d', -min(bathy_z,[],"all")/1.0e+3),'km.bin'] ;
+fprintf(fname);
 fid=fopen(fname,'w','b'); 
 fwrite(fid,bathy_z,prec); 
 fclose(fid);
@@ -471,21 +513,34 @@ fname = strcat('Hcond_', satellite_name,'.bin');
 fid=fopen(fname,'w','b');
 fwrite(fid,Hcond,prec);
 fclose(fid);
+func_replace_string('data.shelfice','SHELFICEHcondFile=',['SHELFICEHcondFile=''',fname,''','])
+
 
 % tidal heating
-Htide = repmat((hice./hice0).^ptide.*Htideprof + Hmixbendprof, [nx, 1]);
+if useShellTides > 0
+    Htide = repmat((hice./hice0).^ptide.*Htideprof + Hmixbendprof, [nx, 1]);
+else
+    Htide = repmat(Htide0, [nx, ny]);
+end	
 fname = strcat('Htide_', satellite_name,'.bin');
 fid=fopen(fname,'w','b');
 fwrite(fid,Htide,prec);
 fclose(fid);
+func_replace_string('data.shelfice','SHELFICEHtideFile=',['SHELFICEHcondFile=''',fname,''','])
+
 
 % bottom heating
+ 
 Hcore = repmat(Hcore, [nx, 1]);
 fname = strcat('Hcore_', satellite_name,'.bin');
 fid=fopen(fname,'w','b');
 fwrite(fid,Hcore,prec);
 fclose(fid);
-func_replace_string('data','geothermalFile=', ['geothermalFile=''',fname,''','])
+if ~addFloorice
+    func_replace_string('data','geothermalFile=', ['geothermalFile=''',fname,''','])
+else
+    func_replace_string('data.hpimm','hpimm_QbotFile=',['hpimm_QbotFile=''',fname,''','])
+end
 % potential temperature
 fname=strcat('theta_ini_', sprintf('%i%s',delTemp*1.0e3,'mK.bin'));
 fid=fopen(fname,'w','b');

@@ -24,10 +24,11 @@ export NCPUS=$NCORES
 export NCPU_PERNODE=32
 export NNODES=$(((NCORES-1) / NCPU_PERNODE+1))
 if [[ $RESOL =~ ^([A-Za-z]+)\(([0-9]+),([0-9]+),([0-9]+)\)$ ]]; then
-    STRING="${BASH_MATCH[1]}"
-    export NZ="${BASH_MATCH[2]}"
-    export NY="${BASH_MATCH[3]}"
-    export NX="${BASH_MATCH[4]}"
+    echo $BASH_REMATCH
+    STRING="${BASH_REMATCH[1]}"
+    export NZ="${BASH_REMATCH[2]}"
+    export NY="${BASH_REMATCH[3]}"
+    export NX="${BASH_REMATCH[4]}"
     export RESOLUTION="${STRING}${NX}x${NY}y"
 else
     echo "Error: RESOL format not recognized (expected: STRING(nz,ny,nx))"
@@ -62,8 +63,8 @@ fi
 if [[ $TODO == *"compile"* ]]; then
     mkdir $CASENAME
     cd $CASENAME
-    #cp $sizefile ../${CODEDIR}/SIZE.h
-    cp ../${CODEDIR}/SIZE.h $sizefile
+    cp $sizefile ../${CODEDIR}/SIZE.h
+    # cp ../${CODEDIR}/SIZE.h $sizefile
     sed -i "s/_NR_/$NZ/g" ../${CODEDIR}/SIZE.h
 #    sed -i "s/_NX_/$NX/g" ../${CODEDIR}/SIZE.h
     cp -r ../${CODEDIR} ./code

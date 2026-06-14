@@ -87,6 +87,9 @@ c wykang: add new namelist variables
      &     ,RealSteppingIceShell
      &     ,usePT
      &     ,addmixbend
+c cjg: new namelist variables
+     &     ,SHELFICEHcondFile
+     &     ,SHELFICEHtideFile
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
@@ -123,6 +126,8 @@ C Set defaults values for parameters in SHELFICE.h
       SHELFICEtopoFile         = ' '
       SHELFICEmassFile         = ' '
       SHELFICEloadAnomalyFile  = ' '
+      SHELFICEHcondFile        = ' '
+      SHELFICEHtideFile        = ' '
       SHELFICEMassDynTendFile  = ' '
       SHELFICETransCoeffTFile  = ' '
       SHELFICElatentHeat       =  334.0 _d 3
