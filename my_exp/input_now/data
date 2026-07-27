@@ -5,6 +5,7 @@
 # Continuous equation parameters
 &PARM01
 viscAh=1.000000,
+<<<<<<< Updated upstream
 viscAhW=1,
 #viscA4=0.05e3,
 viscAr=1.000000,
@@ -16,6 +17,11 @@ viscAr=1.000000,
 #viscArNr=50*0.1,0.12,0.2,0.3,0.5,0.7,15*1,
 viscAh=1.000000,
 viscAh=1.000000,
+=======
+#viscA4=0.05e3,
+viscAr=1.000000,
+viscAhW=1.000000,
+>>>>>>> Stashed changes
 useSmag3D=.FALSE.,
 cosPower=0.,
 viscC2Smag=3.,
@@ -30,25 +36,42 @@ hFacSup=2.0,
 # set manually b/c of bug in gendata
 # tRef=80*-12.5875,-12.4314,-12.2740,-12.1154,-11.9556,-11.7946,-11.6325,-11.4692,-11.3047,-11.1392,-10.9725,-10.8048,
 # tRef=91*-12.5875,
+<<<<<<< Updated upstream
 sRef=138*0.100,
+=======
+sRef=130*10.0,
+>>>>>>> Stashed changes
 no_slip_sides=.FALSE.,
 no_slip_bottom=.FALSE.,
 bottomDragLinear=0.0001,
 #ivdc_kappa=1.0,
+<<<<<<< Updated upstream
 diffKhT=0.001000,
 diffKrT=0.001000,
+=======
+diffKhT=0.1000,
+diffKrT=0.1000,
+>>>>>>> Stashed changes
 #diffK4T=1.E4,
-diffKhS=0.001,
-diffKrS=0.001,
+diffKhS=0.1,
+diffKrS=0.1,
 #diffK4S=1.E4,
 eosType=SEAFRZ,
 tAlpha=0.000450,
 sBeta=NaN,
+<<<<<<< Updated upstream
 rotationPeriod=618153.120000
 gravity=1.425413,
 gravityFile='gravity_myMoon.bin',
 rhoNil=NaN,
 rhoConst=1121.321062,
+=======
+rotationPeriod=302400,
+gravity=1.425413,
+gravityFile='gravity_myMoon.bin',
+rhoNil=NaN,
+rhoConst=1120.988234,
+>>>>>>> Stashed changes
 tempAdvScheme=33,
 saltAdvScheme=33,
 HeatCapacity_Cp=4.184e+03,
@@ -60,7 +83,7 @@ selectCoriScheme=2,
 selectVortScheme=2,
 selectKEscheme=2,
 useNHMTerms=.TRUE.,
-saltStepping=.TRUE.,
+saltStepping=.FALSE.,
 exactConserv=.TRUE.,
 useSingleCpuIO=.TRUE.,
 readBinaryPrec=32,
@@ -90,21 +113,21 @@ cg3dMaxIters= 180,
 #pickupSuff='0029289600',
 pickupStrictlyMatch=.FALSE.,
  nIter0=0,
- nTimeSteps=2592000,
-deltaT=600,
+ nTimeSteps=103680,
+deltaT=300,
 momDissip_In_AB=.FALSE.,
 #deltaTmom=1200.0,
 #deltaTfreesurf=3600.0,
 #deltaTtracer=86400.0,
 #deltaTClock =21600.0,
 
-#chkptFreq=0.0,
-#pChkptFreq=124416000.0,
+chkptFreq=31104000.0,
+pChkptFreq=31104000.0,
 writePickupAtEnd=.TRUE.,
 #taveFreq=1555200000.0,
 #diagFreq=1555200000.0,
-dumpFreq=3000.0,
-monitorFreq=3000.0,
+dumpFreq=86400.0,
+monitorFreq=86400.0,
 #dumpFreq=259200.0,
 #monitorFreq=259200.0,
 monitorSelect=2,
@@ -121,20 +144,34 @@ pCellMix_diffKr=1,
 pCellMix_select=30,
 usingSphericalPolarGrid=.TRUE.,
 #flat
+<<<<<<< Updated upstream
 delR=50000.000000,800.000000,880.000000,968.000000,1064.800000,1171.280000,1288.408000,1417.248800,1558.973680,
 1714.871048,1886.358153,2074.993968,2282.493365,113*2505.524094,2282.493365,2074.993968,1886.358153,1714.871048,
 1558.973680,1417.248800,1288.408000,1171.280000,1064.800000,968.000000,880.000000,800.000000,
 ygOrigin=-84.,
 delY=96*1.750000,
 delX=96*1.750000,
+=======
+delR=57390.498904,800.000000,880.000000,968.000000,1064.800000,1171.280000,1288.408000,1417.248800,1558.973680,1714.871048,1886.358153,
+2074.993968,2282.493365,105*2493.737,2282.493365,2074.993968,1886.358153,1714.871048,1558.973680,1417.248800,1288.408000,1171.280000,
+1064.800000,968.000000,880.000000,800.000000,
+ygOrigin=-84.,
+delY=96*1.75,
+delX=96*1.75,
+>>>>>>> Stashed changes
 rSphere=2634100.000000,
 deepAtmosphere=.TRUE.,
 &
 
 # Input datasets
 &PARM05
+<<<<<<< Updated upstream
 bathyFile='my_bathy_3.663606e+02km.bin',
 hydrogThetaFile='theta_ini_1mK.bin',
+=======
+bathyFile='my_bathy_3.534478e+02km.bin',
+hydrogThetaFile='theta_ini.1mK.bin',
+>>>>>>> Stashed changes
 checkIniTemp = .FALSE.,
 maskIniTemp = .TRUE.,
 # thetaClimFile  = 'rbcs_bottom.bin',

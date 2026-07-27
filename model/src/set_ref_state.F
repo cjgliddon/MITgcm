@@ -199,6 +199,15 @@ C--   Compute reference stratification: N^2 = -(g/rho_c) * d.rho/dz @ const. p
      O                          rhoDw, myThid )
           dBdrRef(k) = (rhoDw - rhoUp)*recip_drC(k)
      &               *recip_rhoConst*gravity*gravFacF(k)
+C- check for NaNs
+          IF (dBdrRef(k) .NE. dBdrRef(k)) THEN
+           PRINT *, "Warning: NaN in dBdrRef detected at k=",k
+           PRINT *, "rhoDw: ", rhoDw
+           PRINT *, "rhoUp: ", rhoUp
+           PRINT *, "pLoc: ", pLoc
+           PRINT *, "tLoc: ", tRef(k), tRef(k-1)
+           PRINT *, "sLoc: ", sRef(k), sRef(k-1)
+          ENDIF
           IF ( eosType.EQ.'LINEAR' ) THEN
 C- get more precise values (differences from above are due to machine round-off)
             dBdrRef(k) = ( sBeta *(sRef(k)-sRef(k-1))

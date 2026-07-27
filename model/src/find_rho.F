@@ -236,6 +236,18 @@ c#endif /* ALLOW_AUTODIFF_TAMC */
           ENDDO
          ENDDO
 
+      ELSEIF( equationOfState .EQ. 'SEAFRZ' ) THEN
+         CALL PRESSURE_FOR_EOS(
+     I             bi, bj, iMin, iMax, jMin, jMax, kRef, dp0,
+     O             locPres,
+     I             myThid )
+
+         CALL FIND_RHO_SFZ_2D(
+     I             iMin, iMax, jMin, jMax,
+     I             locPres, tFld, sFld,
+     O             rhoLoc,
+     I             myThid)
+
       ELSEIF( equationOfState .EQ. 'IDEALG' ) THEN
 
          CALL PRESSURE_FOR_EOS(
@@ -1162,6 +1174,12 @@ C     density of sea water at pressure p
        rhoDen = 1.0/(epsln+den)
 
        rhoLoc = rhoNum*rhoDen
+      ELSEIF( equationOfState .EQ. 'SEAFRZ' ) THEN
+
+       ct = tLoc
+       sa = sLoc
+       p  = (pLoc + dp0)*SItodbar
+       CALL FIND_RHO_SFZ_SCALAR(p,ct,sa,rhoLoc)
 
       ELSEIF( equationOfState .EQ. 'IDEALG' ) THEN
 

@@ -1,0 +1,13 @@
+# =================================
+# | Parameters for HPIMC package |
+# =================================
+
+&HPIMC_PARM01
+dTdz_hpi=-1.0e-4,
+hpimc_flooriceType='V',
+hpimc_QbotType=1,
+hpimc_prescribeTb=.TRUE.,
+hpimc_TbtopFile='thetaBL_top.bin',
+hpimc_TbbotFile='thetaBL_bot.bin',
+hpimc_QbotFile='Qbot_uniform.bin',
+&

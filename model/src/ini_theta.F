@@ -57,6 +57,7 @@ C--   Initialise temperature field to the vertical reference profile
          DO j=1-OLy,sNy+OLy
           DO i=1-OLx,sNx+OLx
            theta(i,j,k,bi,bj) = tRef(k)
+           PRINT *, "thetaRef at k=", k, tRef(k)
           ENDDO
          ENDDO
         ENDDO

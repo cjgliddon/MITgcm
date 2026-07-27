@@ -47,6 +47,14 @@ C     i,k    :: Loop counters
       INTEGER  i, k, iLen
       INTEGER  iUnit
       CHARACTER*(MAX_LEN_MBUF) msgBuf
+#ifdef ALLOW_HPIMM
+      _RL p_nodes(4)
+      _RL th_nodes(4)
+      _RL T_nodes(4)
+      _RL S_nodes(4)
+      _RL rho_vals(4,4,4)
+      _RL eta_vals(4,4,4)
+#endif
 
       IF ( .NOT.fluidIsWater ) RETURN
 
@@ -370,77 +378,115 @@ C       READ(iUnit) sfz_EOSnorm_w, sfz_EOScoef_w
 C       CLOSE(iUnit)
 C       print *, "Read in coefficients successfully"
 C       print *, sfz_EOSnorm_w
-       sfz_EOSnorm_w(1)  = 5.0 _d 8
-       sfz_EOSnorm_w(2)  = 5.0 _d 8
-       sfz_EOSnorm_w(3)  = 3.0 _d 2
-       sfz_EOSnorm_w(4)  = 5.0 _d 1
-       sfz_EOSnorm_w(5)  = 1.0 _d 2
-       sfz_EOSnorm_w(6)  = 1.0 _d 2
+C      Chebyshev nodes along axes used to compute interpolators
+       p_nodes(1)  = 8.61572221 _d 07
+       p_nodes(2)  = 3.43225370 _d 08
+       p_nodes(3)  = 7.06774630 _d 08
+       p_nodes(4)  = 9.63842778 _d 08
 
-       sfz_EOScoef_w(0, 0, 0) =   +4.275928 _d +05
-       sfz_EOScoef_w(0, 0, 1) =   -1.919037 _d +04
-       sfz_EOScoef_w(0, 0, 2) =   +7.416973 _d +03
-       sfz_EOScoef_w(0, 0, 3) =   -2.882602 _d +03
-       sfz_EOScoef_w(0, 1, 0) =   -1.857708 _d +04
-       sfz_EOScoef_w(0, 1, 1) =   -5.773308 _d +03
-       sfz_EOScoef_w(0, 1, 2) =   +1.480813 _d +03
-       sfz_EOScoef_w(0, 1, 3) =   -6.741345 _d +02
-       sfz_EOScoef_w(0, 2, 0) =   -1.486958 _d +04
-       sfz_EOScoef_w(0, 2, 1) =   +6.445257 _d +02
-       sfz_EOScoef_w(0, 2, 2) =   -1.157039 _d +02
-       sfz_EOScoef_w(0, 2, 3) =   +1.578391 _d +02
-       sfz_EOScoef_w(0, 3, 0) =   +8.260752 _d +02
-       sfz_EOScoef_w(0, 3, 1) =   -3.155601 _d +01
-       sfz_EOScoef_w(0, 3, 2) =   +2.130871 _d +01
-       sfz_EOScoef_w(0, 3, 3) =   -4.038205 _d  00
-       sfz_EOScoef_w(1, 0, 0) =   +4.156308 _d +05
-       sfz_EOScoef_w(1, 0, 1) =   -1.776681 _d +04
-       sfz_EOScoef_w(1, 0, 2) =   +1.720573 _d +03
-       sfz_EOScoef_w(1, 0, 3) =   -6.120401 _d +01
-       sfz_EOScoef_w(1, 1, 0) =   +9.034088 _d +03
-       sfz_EOScoef_w(1, 1, 1) =   -5.159931 _d +02
-       sfz_EOScoef_w(1, 1, 2) =   +1.258743 _d +02
-       sfz_EOScoef_w(1, 1, 3) =   -1.844094 _d +02
-       sfz_EOScoef_w(1, 2, 0) =   +6.087173 _d +01
-       sfz_EOScoef_w(1, 2, 1) =   -9.484935 _d +01
-       sfz_EOScoef_w(1, 2, 2) =   -1.092354 _d +02
-       sfz_EOScoef_w(1, 2, 3) =   +9.958629 _d +01
-       sfz_EOScoef_w(1, 3, 0) =   +2.668671 _d +01
-       sfz_EOScoef_w(1, 3, 1) =   -7.102790 _d +01
-       sfz_EOScoef_w(1, 3, 2) =   +7.579381 _d +01
-       sfz_EOScoef_w(1, 3, 3) =   -1.387720 _d +01
-       sfz_EOScoef_w(2, 0, 0) =   -1.918803 _d +04
-       sfz_EOScoef_w(2, 0, 1) =   +2.519418 _d +03
-       sfz_EOScoef_w(2, 0, 2) =   -4.040924 _d +02
-       sfz_EOScoef_w(2, 0, 3) =   +7.418145 _d +01
-       sfz_EOScoef_w(2, 1, 0) =   -4.381279 _d +02
-       sfz_EOScoef_w(2, 1, 1) =   -2.663733 _d +02
-       sfz_EOScoef_w(2, 1, 2) =   +2.348891 _d +02
-       sfz_EOScoef_w(2, 1, 3) =   -6.286390 _d +01
-       sfz_EOScoef_w(2, 2, 0) =   -3.573551 _d +02
-       sfz_EOScoef_w(2, 2, 1) =   +2.426299 _d +02
-       sfz_EOScoef_w(2, 2, 2) =   -2.159355 _d +02
-       sfz_EOScoef_w(2, 2, 3) =   +4.776459 _d +01
-       sfz_EOScoef_w(2, 3, 0) =   -3.890089 _d +01
-       sfz_EOScoef_w(2, 3, 1) =   +9.677351 _d -01
-       sfz_EOScoef_w(2, 3, 2) =   +5.554148 _d +01
-       sfz_EOScoef_w(2, 3, 3) =   -3.679562 _d +01
-       sfz_EOScoef_w(3, 0, 0) =   +4.259075 _d +03
-       sfz_EOScoef_w(3, 0, 1) =   -8.970547 _d +02
-       sfz_EOScoef_w(3, 0, 2) =   +1.329104 _d +02
-       sfz_EOScoef_w(3, 0, 3) =   -5.285910 _d +01
-       sfz_EOScoef_w(3, 1, 0) =   -2.250242 _d +02
-       sfz_EOScoef_w(3, 1, 1) =   +2.635088 _d +02
-       sfz_EOScoef_w(3, 1, 2) =   -2.236413 _d +01
-       sfz_EOScoef_w(3, 1, 3) =   -2.660591 _d +01
-       sfz_EOScoef_w(3, 2, 0) =   +3.525243 _d +02
-       sfz_EOScoef_w(3, 2, 1) =   -2.809773 _d +02
-       sfz_EOScoef_w(3, 2, 2) =   +1.184686 _d +02
-       sfz_EOScoef_w(3, 2, 3) =   +6.159564 _d  00
-       sfz_EOScoef_w(3, 3, 0) =   -9.240942 _d  00
-       sfz_EOScoef_w(3, 3, 1) =   +7.440086 _d +01
-       sfz_EOScoef_w(3, 3, 2) =   -7.579247 _d +01
-       sfz_EOScoef_w(3, 3, 3) =   +2.949727 _d +01
+       th_nodes(1) = 2.4152240935 _d 02
+       th_nodes(2) = 2.5234633135 _d 02
+       th_nodes(3) = 2.6765366865 _d 02
+       th_nodes(4) = 2.7847759065 _d 02
+
+       T_nodes(1)  = 2.4266421636 _d 02
+       T_nodes(2)  = 2.6160607987 _d 02
+       T_nodes(3)  = 2.8839392013 _d 02
+       T_nodes(4)  = 3.0733578364 _d 02
+
+       S_nodes(1)  = 3.806023370 _d 00
+       S_nodes(2)  = 3.086582838 _d 01
+       S_nodes(3)  = 6.913417162 _d 01
+       S_nodes(4)  = 9.619397663 _d 01
+
+C      Load function values
+
+       OPEN(Unit=iUnit, FILE=sfz_RhoFile, STATUS='OLD',
+     &      FORM='unformatted', ACCESS='sequential')
+       READ(iUnit) rho_vals
+       CLOSE(iUnit)
+
+       OPEN(Unit=iUnit, FILE=sfz_EtaFile, STATUS='OLD',
+     &      FORM='unformatted', ACCESS='sequential')
+       READ(iUnit) eta_vals
+       CLOSE(iUnit)
+
+C      compute coefficients
+       CALL TRIC_SETUP(p_nodes, th_nodes, S_nodes, rho_vals,
+     &                sfz_rhoCoefs)
+       CALL TRIC_SETUP(p_nodes, T_nodes, S_nodes, eta_vals,
+     &                sfz_etaCoefs)
+C       sfz_EOSnorm_w(1)  = 5.0 _d 8
+C       sfz_EOSnorm_w(2)  = 5.0 _d 8
+C       sfz_EOSnorm_w(3)  = 3.0 _d 2
+C       sfz_EOSnorm_w(4)  = 5.0 _d 1
+C       sfz_EOSnorm_w(5)  = 1.0 _d 2
+C       sfz_EOSnorm_w(6)  = 1.0 _d 2
+C
+C       sfz_EOScoef_w(0, 0, 0) =   +4.275928 _d +05
+C       sfz_EOScoef_w(0, 0, 1) =   -1.919037 _d +04
+C       sfz_EOScoef_w(0, 0, 2) =   +7.416973 _d +03
+C       sfz_EOScoef_w(0, 0, 3) =   -2.882602 _d +03
+C       sfz_EOScoef_w(0, 1, 0) =   -1.857708 _d +04
+C       sfz_EOScoef_w(0, 1, 1) =   -5.773308 _d +03
+C       sfz_EOScoef_w(0, 1, 2) =   +1.480813 _d +03
+C       sfz_EOScoef_w(0, 1, 3) =   -6.741345 _d +02
+C       sfz_EOScoef_w(0, 2, 0) =   -1.486958 _d +04
+C       sfz_EOScoef_w(0, 2, 1) =   +6.445257 _d +02
+C       sfz_EOScoef_w(0, 2, 2) =   -1.157039 _d +02
+C       sfz_EOScoef_w(0, 2, 3) =   +1.578391 _d +02
+C       sfz_EOScoef_w(0, 3, 0) =   +8.260752 _d +02
+C       sfz_EOScoef_w(0, 3, 1) =   -3.155601 _d +01
+C       sfz_EOScoef_w(0, 3, 2) =   +2.130871 _d +01
+C       sfz_EOScoef_w(0, 3, 3) =   -4.038205 _d  00
+C       sfz_EOScoef_w(1, 0, 0) =   +4.156308 _d +05
+C       sfz_EOScoef_w(1, 0, 1) =   -1.776681 _d +04
+C       sfz_EOScoef_w(1, 0, 2) =   +1.720573 _d +03
+C       sfz_EOScoef_w(1, 0, 3) =   -6.120401 _d +01
+C       sfz_EOScoef_w(1, 1, 0) =   +9.034088 _d +03
+C       sfz_EOScoef_w(1, 1, 1) =   -5.159931 _d +02
+C       sfz_EOScoef_w(1, 1, 2) =   +1.258743 _d +02
+C       sfz_EOScoef_w(1, 1, 3) =   -1.844094 _d +02
+C       sfz_EOScoef_w(1, 2, 0) =   +6.087173 _d +01
+C       sfz_EOScoef_w(1, 2, 1) =   -9.484935 _d +01
+C       sfz_EOScoef_w(1, 2, 2) =   -1.092354 _d +02
+C       sfz_EOScoef_w(1, 2, 3) =   +9.958629 _d +01
+C       sfz_EOScoef_w(1, 3, 0) =   +2.668671 _d +01
+C       sfz_EOScoef_w(1, 3, 1) =   -7.102790 _d +01
+C       sfz_EOScoef_w(1, 3, 2) =   +7.579381 _d +01
+C       sfz_EOScoef_w(1, 3, 3) =   -1.387720 _d +01
+C       sfz_EOScoef_w(2, 0, 0) =   -1.918803 _d +04
+C       sfz_EOScoef_w(2, 0, 1) =   +2.519418 _d +03
+C       sfz_EOScoef_w(2, 0, 2) =   -4.040924 _d +02
+C       sfz_EOScoef_w(2, 0, 3) =   +7.418145 _d +01
+C       sfz_EOScoef_w(2, 1, 0) =   -4.381279 _d +02
+C       sfz_EOScoef_w(2, 1, 1) =   -2.663733 _d +02
+C       sfz_EOScoef_w(2, 1, 2) =   +2.348891 _d +02
+C       sfz_EOScoef_w(2, 1, 3) =   -6.286390 _d +01
+C       sfz_EOScoef_w(2, 2, 0) =   -3.573551 _d +02
+C       sfz_EOScoef_w(2, 2, 1) =   +2.426299 _d +02
+C       sfz_EOScoef_w(2, 2, 2) =   -2.159355 _d +02
+C       sfz_EOScoef_w(2, 2, 3) =   +4.776459 _d +01
+C       sfz_EOScoef_w(2, 3, 0) =   -3.890089 _d +01
+C       sfz_EOScoef_w(2, 3, 1) =   +9.677351 _d -01
+C       sfz_EOScoef_w(2, 3, 2) =   +5.554148 _d +01
+C       sfz_EOScoef_w(2, 3, 3) =   -3.679562 _d +01
+C       sfz_EOScoef_w(3, 0, 0) =   +4.259075 _d +03
+C       sfz_EOScoef_w(3, 0, 1) =   -8.970547 _d +02
+C       sfz_EOScoef_w(3, 0, 2) =   +1.329104 _d +02
+C       sfz_EOScoef_w(3, 0, 3) =   -5.285910 _d +01
+C       sfz_EOScoef_w(3, 1, 0) =   -2.250242 _d +02
+C       sfz_EOScoef_w(3, 1, 1) =   +2.635088 _d +02
+C       sfz_EOScoef_w(3, 1, 2) =   -2.236413 _d +01
+C       sfz_EOScoef_w(3, 1, 3) =   -2.660591 _d +01
+C       sfz_EOScoef_w(3, 2, 0) =   +3.525243 _d +02
+C       sfz_EOScoef_w(3, 2, 1) =   -2.809773 _d +02
+C       sfz_EOScoef_w(3, 2, 2) =   +1.184686 _d +02
+C       sfz_EOScoef_w(3, 2, 3) =   +6.159564 _d  00
+C       sfz_EOScoef_w(3, 3, 0) =   -9.240942 _d  00
+C       sfz_EOScoef_w(3, 3, 1) =   +7.440086 _d +01
+C       sfz_EOScoef_w(3, 3, 2) =   -7.579247 _d +01
+C       sfz_EOScoef_w(3, 3, 3) =   +2.949727 _d +01
 #endif /* ALLOW_HPIMM */
               
       ELSEIF( equationOfState .EQ. 'IDEALG' ) THEN

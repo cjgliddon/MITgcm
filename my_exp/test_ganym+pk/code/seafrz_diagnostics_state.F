@@ -49,9 +49,9 @@ C     !LOCAL VARIABLES:
 #endif /* SEAFRZ_3D_STATE */
 
 #ifdef SEAFRZ_2D_STATE
-         CALL DIAGNOSTICS_FILL( sfz_Surf1 ,   'SfzSur1',
+         CALL DIAGNOSTICS_FILL( sfz_Surf1 ,   'SfzSur1 ',
      &                          0, 1, 0, 1, 1, myThid )
-         CALL DIAGNOSTICS_FILL( sfz_Surf2 ,   'SfzSur2',
+         CALL DIAGNOSTICS_FILL( sfz_Surf2 ,   'SfzSur2 ',
      &                          0, 1, 0, 1, 1, myThid )
          CALL DIAGNOSTICS_FILL( sfz_floorice_Qflx,   'SfzLQflx',
      &                          0, 1, 0, 1, 1, myThid )

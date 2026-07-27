@@ -1,14 +1,14 @@
-#include "SEAFRZ_OPTIONS.h"
+#include "HPIMM_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: SEAFRZ_INIT_FIXED
+C !ROUTINE: HPIMM_INIT_FIXED
 
 C !INTERFACE:
-      SUBROUTINE SEAFRZ_INIT_FIXED( myThid )
+      SUBROUTINE HPIMM_INIT_FIXED( myThid )
 
 C     !DESCRIPTION:
-C     Initialize SEAFRZ variables that are kept fixed during the run.
+C     Initialize HPIMM variables that are kept fixed during the run.
 
 C     !USES:
       IMPLICIT NONE
@@ -16,7 +16,7 @@ C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
 #include "PARAMS.h"
-#include "SEAFRZ.h"
+#include "HPIMM.h"
 
 C     !INPUT/OUTPUT PARAMETERS:
 C     myThid ::  my Thread Id number
@@ -30,40 +30,30 @@ C      INTEGER iUnit
 
 #ifdef ALLOW_MNC
       IF (useMNC) THEN
-        CALL SEAFRZ_MNC_INIT( myThid )
+        CALL HPIMM_MNC_INIT( myThid )
       ENDIF
 #endif /* ALLOW_MNC */
 
 #ifdef ALLOW_DIAGNOSTICS
       IF ( useDiagnostics ) THEN
-        CALL SEAFRZ_DIAGNOSTICS_INIT( myThid )
+        CALL HPIMM_DIAGNOSTICS_INIT( myThid )
       ENDIF
 #endif
       
-C      iUnit=100
-C      IF (eosType .eq. "SEAFRZ") THEN
-C     Read in coefficients from the data file
-C        OPEN(UNIT=iUnit, FILE=sfz_EOSFile, STATUS='OLD',
-C     &       FORM='unformatted', ACCESS='sequential')
-C        READ(iUnit) sfz_EOSnorm_w, sfz_EOScoef_w
-C        CLOSE(iUnit)
-C        print *, "Read in coefficients successfully"
-C        print *, sfz_EOSnorm_w
-C      END IF
-
-
-      MW_H2O = 0.0180153
-C     rho and cp values taken from Seafreeze
-C     heats of fusion estimated using formulae in Dunaeva et al. (2010)
-      IF ( sfz_flooriceType .eq. "III" ) THEN
+C     rho, cp, and Lfus values taken from Seafreeze.
+C     This updates an earlier version of the code where the Lfus values were
+C     estimated using formulas from Dunaeva et al. (2010); now Lfus is just
+C     the enthalpy difference between the ice phase and pure water at the
+C     specified P/T.
+      IF ( hpimm_flooriceType .eq. "III" ) THEN
         sfz_FPcoef_l(1) =  3.4648 _d -2
         sfz_FPcoef_l(2) = -6.1843 _d -1
         sfz_FPcoef_l(3) =  2.4444 _d  2
 C     assume p = 300 MPa, T = 255 K
         rho_hpi  = 1.165 _d 3
         cp_hpi   = 1.843 _d 3
-        Lfus_hpi = 4.541 _d 3 / MW_H2O
-      ELSE IF ( sfz_flooriceType .eq. "V  ") THEN
+        Lfus_hpi = 2.656 _d 5
+      ELSE IF ( hpimm_flooriceType .eq. "V  ") THEN
         sfz_FPcoef_l(1) =  5.7906 _d -2
         sfz_FPcoef_l(2) = -8.0362 _d -2
         sfz_FPcoef_l(3) =  2.3781 _d  2
@@ -71,8 +61,8 @@ C     assume p = 450 MPa, T = 265 K ;
 C     these are characteristic values for Callisto seafloor
         rho_hpi  = 1.252 _d 3
         cp_hpi   = 1.824 _d 3
-        Lfus_hpi = 4.973 _d 3 / MW_H2O
-      ELSE IF ( sfz_flooriceType .eq. "VI ") THEN
+        Lfus_hpi = 2.741 _d 5
+      ELSE IF ( hpimm_flooriceType .eq. "VI ") THEN
         sfz_FPcoef_l(1) =  7.3012 _d -2
         sfz_FPcoef_l(2) = -8.9250 _d -1
         sfz_FPcoef_l(3) =  2.2884 _d  2
@@ -80,7 +70,7 @@ C     assume p = 700 MPa, T = 280 K ;
 C     these are characteristic values for Ganymede seafloor
         rho_hpi  = 1.332 _d 3
         cp_hpi   = 2.188 _d 3
-        Lfus_hpi = 5.192 _d 3 / MW_H2O
+        Lfus_hpi = 2.836 _d 5
       END IF
 
 
@@ -88,27 +78,43 @@ C     dummy code for unset coefficients
 C      DO iCoef=1,20
 C       sfz_EOScoef_w(iCoef) = 0. _d 0
 C      ENDDO
-      DO iCoef=1,5
-       sfz_FPcoef_nl(iCoef) = 0. _d 0
-      ENDDO
-      
+
 C     create bottom heat flux array
-      IF ( sfz_addFloorice ) THEN      
+      IF ( hpimm_addFloorice ) THEN      
 C     instantiate bottom forcing array
-       IF (sfz_QbotType .EQ. 0) THEN
+       IF (hpimm_QbotType .EQ. 0) THEN
         DO bj=myByLo(myThid), myByHi(myThid)
          DO bi=myBxLo(myThid), myBxHi(myThid)
           DO j = 1-OLy,sNy+OLy
            DO i = 1-OLx,sNx+OLx
-            sfz_Qbot(i,j,bi,bj) = -rho_hpi*cp_hpi*kappaT_hpi*dTdzBot
+            hpimm_Qbot(i,j,bi,bj) = -rho_hpi*cp_hpi*kappaT_hpi*dTdz_hpi
            ENDDO
           ENDDO
          ENDDO
         ENDDO
        ENDIF
-      ELSE IF ((sfz_QbotType .EQ. 1) .AND. (sfz_QbotFile .NE. ' ')) THEN
-       CALL READ_FLD_XY_RL( sfz_QbotFile, ' ', sfz_Qbot, 0, myThid)
+      ELSE IF ((hpimm_QbotType .EQ. 1) .AND. (hpimm_QbotFile .NE. ' '))
+     &    THEN
+       CALL READ_FLD_XY_RL( hpimm_QbotFile, ' ', hpimm_Qbot, 0, myThid)
       END IF
+      
+C     Read in boundary-layer temperature fields if we're prescribing them
+      IF (hpimm_prescribeTb) THEN      
+C       DO j = 1-OLy,sNy+OLy
+C        DO i = 1-OLx,sNx+OLx
+C         hpimm_shelfice_tBL(i,j,bi,bj) = 0. _d 0
+C         hpimm_floorice_tBL(i,j,bi,bj) = 0. _d 0
+C        ENDDO
+C       ENDDO       
+       IF (hpimm_TbtopFile .NE. ' ' ) THEN
+        CALL READ_FLD_XY_RL( hpimm_TbtopFile, ' ',
+     &                       hpimm_shelfice_tBL, 0, myThid)
+       ENDIF
+       IF (hpimm_TbbotFile .NE. ' ' ) THEN
+        CALL READ_FLD_XY_RL( hpimm_TbbotFile, ' ', 
+     &                       hpimm_floorice_tBL, 0, myThid)
+       ENDIF
+      ENDIF
 
       RETURN
       END

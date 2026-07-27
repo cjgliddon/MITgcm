@@ -183,42 +183,6 @@ CEOP
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
 CBOP
-C     !ROUTINE: SW_TEMP
-C     !INTERFACE:
-      _RL FUNCTION SFZ_TEMP( S, T, P, PR )
-C     !DESCRIPTION: \bv
-C     *=============================================================*
-C     | S/R  SW_TEMP
-C     | o compute in-situ temperature from potential temperature
-C     *=============================================================*
-C
-C     \ev
-
-C     !USES:
-      IMPLICIT NONE
-C     === Global variables ===
-
-C     !INPUT/OUTPUT PARAMETERS:
-C     === Routine arguments ===
-C     S      :: salinity [g/kg]
-C     T      :: potential temperature [K]
-C     P      :: pressure [Pa]
-C     PR     :: reference pressure [Pa]
-      _RL  S, T, P, PR
-CEOP
-
-C     !FUNCTIONS:
-      _RL SFZ_PTMP
-      EXTERNAL SFZ_PTMP
-
-      SFZ_TEMP = SFZ_PTMP (S,T,PR,P)
-
-      RETURN
-      END
-
-C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-
-CBOP
 C     !ROUTINE: SW_ADTG
 C     !INTERFACE:
       _RL FUNCTION SW_ADTG  (S,T,P)
@@ -481,6 +445,70 @@ CADJ STORE dTp_dTc = loctape_cp2ct
         Tp(i,j) = Tp(i,j) - Tc_diff(i,j)*dTp_dTc(i,j)
        ENDDO
       ENDDO
+
+      RETURN
+      END
+
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+
+CBOP
+C !ROUTINE: SFZ_THETA2T
+
+C !INTERFACE:
+      SUBROUTINE SFZ_THETA2T(
+     I         p, Theta, S, pRef,
+     O         T)
+
+C     !DESCRIPTION:
+C     Converts potential temperature (K) to absolute temperature (K)
+C     at a specified pressure and temperature by solving the implicit
+C     equation eta(p,T,S) - eta(pRef,Theta,S) = 0 using a modified
+C     Newton-Raphson algorithm (see McDougall & Wotherspoon, 2014).
+C     !USES:
+
+      IMPLICIT NONE
+C     == Global variables ===
+#include "SIZE.h"
+#include "EEPARAMS.h"
+#include "HPIMM.h"
+
+C     !INPUT/OUTPUT PARAMETERS:
+C     p         :: pressure (Pa)
+C     theta     :: potential temperature (K)
+C     S         :: salinity (g/kg)
+C     pRef      :: reference pressure (Pa)
+C     T         :: absolute temperature (K)
+      _RL p, theta, S, pRef
+      _RL T
+CEOP
+
+C     !LOCAL VARIABLES:
+      _RL x0,x1
+      _RL x0_star,x1_star
+      _RL f0,f1,df0,df1
+      _RL eta, etaRef
+
+C     since theta and T aren't too different, we use theta as our
+C     initial guess for T
+      x0 = theta
+C     predictor step #1
+      x0_star = x0
+      
+      CALL TRIC_EVAL(sfz_etaCoefs, pRef, theta, S, 0, 0, 0, etaRef)
+      CALL TRIC_EVAL(sfz_etaCoefs, p, x0, S, 0, 0, 0, eta)
+      f0 = etaRef - eta
+      CALL TRIC_EVAL(sfz_etaCoefs, p, x0, S, 0, 1, 0, df0)
+C     corrector step #1
+      x1 = x0 - f0/df0
+
+      CALL TRIC_EVAL(sfz_etaCoefs, p, x1, S, 0, 0, 0, eta)
+      f1 = etaRef - eta
+C     predictor step #2      
+      x1_star = x1 - f1/df0
+      CALL TRIC_EVAL(sfz_etaCoefs, p, 0.5*(x1 + x1_star), S,
+     &               0, 1, 0, df1)
+C     corrector step #2
+      T = x1 - f1/df1
 
       RETURN
       END

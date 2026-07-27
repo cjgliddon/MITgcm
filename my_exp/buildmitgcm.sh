@@ -1,5 +1,5 @@
 #! /bin/bash
-# this should be customerized to your cluster XX
+# load compiler modules appropriate to partition hardware
 if [[ ${SLURM_JOB_PARTITION} == *"hdr"* ]]; then
   module purge
   module load intel/2021.4.0_rhel8
@@ -9,6 +9,7 @@ elif [[ ${SLURM_JOB_PARTITION} == *"fdr"* || ${SLURM_JOB_PARTITION} == *"edr"* ]
   module add openmpi
 fi
 
+# set environment variables
 export GENERIC='on'
 export MITGCMRT="${HOME}/MITgcm"
 export OPTFILE="${MITGCMRT}/tools/build_options/linux_amd64_ifort11"
@@ -16,13 +17,15 @@ export MyExp=`pwd`
 
 # 1. obtain input arguments
 export CASENAME=$1   
-export RESOL=$2 # can be znncs(32,96,501) or znntwod(96,960) or znnx2y96...
+export RESOL=$2 
 export NCORES=$3
 export TODO=$4
+
 export CODEDIR='./code_now' 	# where are your code modifications?
 export NCPUS=$NCORES
 export NCPU_PERNODE=32
 export NNODES=$(((NCORES-1) / NCPU_PERNODE+1))
+# parse resolution string: RESOL should be of format "PREFIX(nz,ny,nx)"
 if [[ $RESOL =~ ^([A-Za-z]+)\(([0-9]+),([0-9]+),([0-9]+)\)$ ]]; then
     echo $BASH_REMATCH
     STRING="${BASH_REMATCH[1]}"
@@ -34,6 +37,9 @@ else
     echo "Error: RESOL format not recognized (expected: STRING(nz,ny,nx))"
     exit 1
 fi
+
+# set timing: EACHITER is the total number of timesteps per submission
+# TOTALITER, meanwhile, is # of timesteps for all submissions
 export CURRENTITER=0
 export EACHITER=$((2592000)) # 103680 iter = 360 day, if timestep: 300s
 export TOTALITER=$((EACHITER*2))
@@ -64,7 +70,6 @@ if [[ $TODO == *"compile"* ]]; then
     mkdir $CASENAME
     cd $CASENAME
     cp $sizefile ../${CODEDIR}/SIZE.h
-    # cp ../${CODEDIR}/SIZE.h $sizefile
     sed -i "s/_NR_/$NZ/g" ../${CODEDIR}/SIZE.h
 #    sed -i "s/_NX_/$NX/g" ../${CODEDIR}/SIZE.h
     cp -r ../${CODEDIR} ./code

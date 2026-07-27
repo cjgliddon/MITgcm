@@ -137,9 +137,8 @@ C     CJG: dummy variables
 #ifdef ALLOW_HPIMM
       _RL deltaT_surf
       _RL SFZ_PTMP
+      _RL T0
       EXTERNAL SFZ_PTMP
-      _RL SFZ_TEMP
-      EXTERNAL SFZ_TEMP
       PARAMETER db2Pa = 1.0 _d 04
 #endif /* ALLOW_HPIMM */
 
@@ -510,9 +509,10 @@ C--   to the surface
           CALL SW_TEMP(sLoc(I,J),tLoc(I,J),pLoc(I,J),zeroRL,tLoc(I,J))
 #else
           IF (eosType .eq. "SEAFRZ") THEN
-           tLoc(I,J) = SFZ_TEMP(sLoc(I,J),tLoc(I,J)+273.15,
-     &                          pLoc(I,J)*db2Pa,sfz_pRef)-273.15
-          ELSE
+           CALL SFZ_THETA2T(pLoc(I,J)*db2Pa,tLoc(I,J)+273.15,
+     &                      sLoc(I,J),sfz_pRef, T0)
+           tLoc(I,J) = T0 - 273.15
+           ELSE
            tLoc(I,J) = SW_TEMP(sLoc(I,J),tLoc(I,J),pLoc(I,J),zeroRL)
           ENDIF
 #endif
@@ -635,8 +635,8 @@ C             thetaFreeze = SFZ_PTMP(sLoc(I,J) ,thetaFreeze+273.15,
 C     &                          pLoc(I,J)*db2Pa, sfz_pRef) - 273.15
 C            PRINT *, "I,J, sLoc, pLoc, thetaFreeze:"
 C            PRINT *, I,J,sLoc(I,J), pLoc(I,J), thetaFreeze
-C             tInSituLoc = SFZ_TEMP(sLoc(I,J), tLoc(I,J)+273.15,
-C     &                          pLoc(I,J)*db2Pa, sfz_pRef) - 273.15
+C             tInSituLoc = SFZ_THETA2T(pLoc(I,J)*db2Pa, tLoc(I,J)+273.15,
+C     &                               sLoc(I,J), sfz_pRef) - 273.15
 C            ENDIF
 C#endif /* ALLOW_HPIMM */
 
@@ -659,8 +659,10 @@ C           CJG: with prescribed BL temp, the calc. is much simpler
      &        *HeatCapacity_Cp*(hpimm_shelfice_tBL(i,j,bi,bj) 
      &        - tInSituLoc)
 C           CJG: convert boundary-layer temp. to absolute temp.
-             tBL = SFZ_TEMP(sBL,hpimm_shelfice_tBL(i,j,bi,bj)+273.15,
-     &                      pLoc(I,J)*db2Pa,sfz_pRef)-273.15
+             CALL SFZ_THETA2T(pLoc(I,J)*db2Pa,
+     &                         hpimm_shelfice_tBL(i,j,bi,bj)+273.15,
+     &                         sBL,sfz_pRef,tBL)
+             tBL = tBL - 273.15
              Qcond = ABS(SHELFICEkappa) * LOG( tBL 
      &        / SHELFICEthetaSurface )/H_ice0
              sigma = (ocQflxUB + Qcond)/SHELFICElatentHeat

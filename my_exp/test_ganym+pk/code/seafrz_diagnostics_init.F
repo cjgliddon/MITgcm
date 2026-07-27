@@ -74,14 +74,14 @@ C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
         CALL DIAGNOSTICS_ADDTOLIST( diagNum,
      I   diagName, diagCode, diagUnits, diagTitle, diagMate, myThid )
 
-        diagName  = 'SfzSur1'
+        diagName  = 'SfzSur1 '
         diagTitle = 'Surface field 1 for package SEAFRZ'
         diagUnits = 'unit            '
         diagCode  = 'SM      L1      '
         CALL DIAGNOSTICS_ADDTOLIST( diagNum,
      I          diagName, diagCode, diagUnits, diagTitle, 0, myThid )
 
-        diagName  = 'SfzSur2'
+        diagName  = 'SfzSur2 '
         diagTitle = 'Surface field 2 for package SEAFRZ'
         diagUnits = 'unit            '
         diagCode  = 'SM      L1      '

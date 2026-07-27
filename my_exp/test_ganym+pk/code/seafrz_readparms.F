@@ -35,11 +35,15 @@ C     iUnit      :: Work variable for IO unit number
      &       sfz_applyTendU, sfz_applyTendV,
      &       sfz_doSwitch1,  sfz_doSwitch2,
      &       sfz_index1,     sfz_index2,
+     &       sfz_QbotType,
      &       sfz_param1,     sfz_param2,
      &       sfz_string1,    sfz_string2,
      &       sfz_Scal1File,  sfz_Scal2File,
      &       sfz_VelUFile,   sfz_VelVFile,
-     &       sfz_Surf1File,  sfz_Surf2File
+     &       sfz_Surf1File,  sfz_Surf2File,
+     &       sfz_QbotFile,
+     &       sfz_flooriceType, dTdzBot,
+     &       sfz_allowFloFrz, sfz_doAutoTini
 
       IF ( .NOT.useSEAFRZ ) THEN
 C-    pkg SEAFRZ is not used
@@ -66,28 +70,32 @@ C-    additional parameters:
       sfz_doSwitch2   = .FALSE.
       sfz_index1      = 0
       sfz_index2      = 0
+      sfz_QbotType    = 0
       sfz_param1      = 0. _d 0
       sfz_param2      = 0. _d 0
       sfz_simple       = .TRUE.
       sfz_addFloorice  = .TRUE.
       sfz_allowFloFrz  = .FALSE.
+      sfz_doAutoTIni   = .TRUE.
 C-    these values are identical to those in the shelfice pkg
       kappaT_hpi       = 1.54 _d -06
       gammaTo_hpi      = 1.0 _d -05
       gammaSo_hpi      = 1.0 _d -05
 C-    this value is an estimate based on Vance et al. (2014)
-      dTdzBot          = 1.0 _d -04
+      dTdzBot          = -1.0 _d -04
       sfz_fpParamType  = 'LINEAR'
       sfz_flooriceType = 'VI '
       sfz_string1     = ' '
       sfz_string2     = ' '
 C-    file names for initial conditions:
+      sfz_EOSFile     = 'sfz_simple_tccoeffs.dat'
       sfz_Scal1File   = ' '
       sfz_Scal2File   = ' '
       sfz_VelUFile    = ' '
       sfz_VelVFile    = ' '
       sfz_Surf1File   = ' '
       sfz_Surf2File   = ' '
+      sfz_QbotFile    = ' '
 
       WRITE(msgBuf,'(A)') 'SEAFRZ_READPARMS: opening data.seafrz'
       CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,

@@ -109,7 +109,6 @@ C     drKp1, recip_drLoc
       _RL drKp1, recip_drLoc
       _RL recip_latentHeat
       _RL tmpFac
-
 #ifdef SHI_ALLOW_GAMMAFRICT
       _RL shiPr, shiSc, shiLo, recip_shiKarman, shiTwoThirds
       _RL gammaTmoleT, gammaTmoleS, gammaTurb, gammaTurbConst
@@ -125,6 +124,18 @@ C     drKp1, recip_drLoc
       _RL SW_TEMP
       EXTERNAL SW_TEMP
 #endif
+C     CJG: dummy variable for in-situ temp
+      _RL tInSituLoc
+
+#ifdef ALLOW_SEAFRZ
+      _RL deltaT_surf
+      _RL SFZ_PTMP
+      EXTERNAL SFZ_PTMP
+      _RL SFZ_TEMP
+      EXTERNAL SFZ_TEMP
+      PARAMETER sfz_pRef = 1.0 _d 05
+      PARAMETER db2Pa = 1.0 _d 04
+#endif /* ALLOW_SEAFRZ */
 
 #ifdef ALLOW_GENTIM2D_CONTROL
       INTEGER iarr
@@ -217,6 +228,15 @@ C     hardcoding this value here is OK because it only applies to ISOMIP
 C     where this value is part of the protocol
       IF ( convertFW2SaltLoc .EQ. -1. ) convertFW2SaltLoc = 33.4 _d 0
 #endif /* ALLOW_ISOMIP_TD */
+C     if we have the SEAFRZ EOS, we need a different FP parameterization
+C     for self-consistency with the other EOS params
+#ifdef ALLOW_SEAFRZ
+      IF ( eosType .EQ. 'SEAFRZ' ) THEN
+       a0 = -6.34807 _d -2
+       b  = -1.02283 _d -3
+       c0 =  1.06590 _d 0
+      ENDIF
+#endif /* ALLOW_SEAFRZ */
 
       DO bj = myByLo(myThid), myByHi(myThid)
        DO bi = myBxLo(myThid), myBxHi(myThid)
@@ -293,6 +313,16 @@ CADJ STORE shelficeMass = comlev1, key=ikey_dynamics, kind=isbyte
         ikey = bi + (bj-1)*nSx + (ikey_dynamics-1)*nSx*nSy
 # endif /* SHI_ALLOW_GAMMAFRICT */
 #endif /* ALLOW_AUTODIFF_TAMC */
+c     wykang: correction due to the variation of g with r
+      Do j=1-OLy, sNy+OLy
+      Do i=1-OLx, sNx+OLx
+        H_ice(i,j)=shelficeMass(i,j,bi,bj)/rhoShelfIce
+c        p_correction(i,j)=((1.-rho_out/rho_bulk)/(1.-H_ice(i,j)/rSphere)
+c     &             +rho_out/rho_bulk*(1.-H_ice(i,j)/rSphere/2.))
+        
+      ENDDO
+      ENDDO
+
 C--   make local copies of temperature, salinity and depth (pressure in deci-bar)
 C--   underneath the ice
         DO J = 1, sNy
@@ -473,7 +503,12 @@ C--   to the surface
 #ifdef ALLOW_OPENAD
           CALL SW_TEMP(sLoc(I,J),tLoc(I,J),pLoc(I,J),zeroRL,tLoc(I,J))
 #else
-          tLoc(I,J) = SW_TEMP(sLoc(I,J),tLoc(I,J),pLoc(I,J),zeroRL)
+          IF (eosType .eq. "SEAFRZ") THEN
+           tLoc(I,J) = SFZ_TEMP(sLoc(I,J),tLoc(I,J)+273.15,
+     &                          pLoc(I,J)*db2Pa,sfz_pRef)-273.15
+          ELSE
+           tLoc(I,J) = SW_TEMP(sLoc(I,J),tLoc(I,J),pLoc(I,J),zeroRL)
+          ENDIF
 #endif
          ENDDO
         ENDDO
@@ -585,6 +620,19 @@ C     (in German).
 C     heat flux into the ice shelf, default is diffusive flux
 C     (Holland and Jenkins, 1999, eq.21)
             thetaFreeze = a0*sLoc(I,J)+c0+b*pLoc(I,J)
+            tInSituLoc = tLoc(I,J)
+C            PRINT *, "local temperature", tInSituLoc
+C     make correction for SeaFreeze EOS
+C#ifdef ALLOW_SEAFRZ
+C            IF (eosType .eq. "SEAFRZ") THEN
+C             thetaFreeze = SFZ_PTMP(sLoc(I,J) ,thetaFreeze+273.15,
+C     &                          pLoc(I,J)*db2Pa, sfz_pRef) - 273.15
+C            PRINT *, "I,J, sLoc, pLoc, thetaFreeze:"
+C            PRINT *, I,J,sLoc(I,J), pLoc(I,J), thetaFreeze
+C             tInSituLoc = SFZ_TEMP(sLoc(I,J), tLoc(I,J)+273.15,
+C     &                          pLoc(I,J)*db2Pa, sfz_pRef) - 273.15
+C            ENDIF
+C#endif /* ALLOW_SEAFRZ */
 
 C wykang: calculate heat conduction rate using log formula if
 C SHELFICEkappa < 0
@@ -596,7 +644,7 @@ C wykang: end calculate heat conduction rate using log formula
 
 c     note that dFac=0 for diffusive only ice
             fwflxFac    = 0. _d 0
-            IF ( tLoc(I,J) .GT. thetaFreeze ) fwflxFac = dFac
+            IF ( tInSituLoc .GT. thetaFreeze ) fwflxFac = dFac
 C     a few abbreviations
             eps1 = rUnit2mass*HeatCapacity_Cp
      &           *shiTransCoeffT(i,j,bi,bj)
@@ -616,8 +664,14 @@ C     code of type (pLoc-const)/pLoc
 c            eps3 = eps3a/pLoc(I,J) --wykang: this is right only when g~=10
 c           wykang: use ice thickness
             eps3=eps3a/H_ice(I,J)
-            eps4 = b*pLoc(I,J) + c0
-            eps6 = eps4 - tLoc(I,J)
+            IF (eosType .eq. "SEAFRZ") THEN
+             deltaT_surf = 0.0
+             eps4 = b*pLoc(I,J) + c0
+     &          - deltaT_surf*SIN(3.14159265*(J+sNy*bj)/Ny) 
+            ELSE
+             eps4 = b*pLoc(I,J) + c0
+            ENDIF
+            eps6 = eps4 - tInSituLoc
             eps7 = eps4 - SHELFICEthetaSurface
 c     note that eps8=0 if dFac=0 for diffusive ice
             eps8 = rUnit2mass*SHELFICEheatCapacity_Cp
@@ -690,6 +744,7 @@ C             STOP 'ABNORMAL END in S/R SHELFICE_THERMODYNAMICS'
             IF ( saltFreeze .LT. 0. _d 0 )
      &           saltFreeze = (- bqe + SQRT(discrim))*recip_aqe
             thetaFreeze = a0*saltFreeze + eps4
+C     make correction for SeaFreeze EOS
 
 C-    CJG: check if salt freeze is negative
             IF ( ABS(saltFreeze) .LT. 1.0D-10 ) THEN
@@ -731,9 +786,12 @@ C wykang: check budget
      &        + Hcond(I,J,bi,bj)*condfac*logkappa
      &        + (Htide(I,J,bi,bj)*tidefac+Hmixbend(I,J,bi,bj))
      &        + SHELFICElatentHeat * freshWaterFlux
-             IF ( mod(MyIter,500000) .EQ. 1 ) THEN
+C              print *, "Budget:", budg
+             IF ( mod(MyIter,216) .EQ. 1 ) THEN
               print *, '!! MyIter:',MyIter, 
-     &         'thetaFreeze=',thetaFreeze,
+     &         ', tLoc=', tLoc(I,J),
+     &         ', thetaFreeze=',thetaFreeze,
+     &         ', correction=',eps4-c0-b*pLoc(I,J),
      &         ', Hcond=',Hcond(I,J,bi,bj)*condfac, 
      &         ', saltFreeze=',saltFreeze, ', budg=',budg
              ENDIF
@@ -750,6 +808,21 @@ c     This is a diagnostic
      &           - freshWaterFlux*( SHELFICElatentHeat
      &           - HeatCapacity_Cp*( thetaFreeze - tLoc(I,J) )*cFac )
 
+C--   Print statements for debugging:
+C            PRINT *, "Shelfice heat flux debug at coord.",I,J,bi,bj
+C            PRINT *, "Term 1 (conduction):", (1-logkappa)*eps3 *
+C     &          (thetaFreeze-SHELFICEthetaSurface)
+C            PRINT *, "Term 2 (conduction):",
+C     &          -logkappa*Hcond(I,J,bi,bj)*condfac
+C            PRINT *, "Term 3 (Tidal):",
+C     &          -(Htide(I,J,bi,bj)*tidefac+Hmixbend(I,J,bi,bj))
+C            PRINT *, "Term 4 (Latent):",
+C     &          -freshWaterFlux*SHELFICElatentHeat
+Ci           PRINT *, "TERM 5 (FWFLX):", freshWaterFlux
+C     &          * HeatCapacity_Cp*(thetaFreeze - tLoc(I,J))*cFac
+C            PRINT *, "Theta & Tloc:", thetaFreeze, tLoc(I,J)
+
+
 C--   compute surface tendencies
 C--   DNG: correction to use cell value for flux rather than BL values
 C--        in order to conserve salt and temp even with real FW Flux
@@ -759,6 +832,13 @@ C--        in order to conserve salt and temp even with real FW Flux
      &           )*( thetaFreeze - tLoc(I,J) )
      &           - rFWinBL*freshWaterFlux*mass2rUnit
      &            *( tLoc(I,J) - theta(I,J,K,bi,bj) )
+C           PRINT *, "Shelfice T forcing: "
+C           PRINT *, "Term 1: ", shiTransCoeffT(i,j,bi,bj)
+C     &            * (thetaFreeze - tLoc(I,J))
+C            PRINT *, "Term 1b:", - cFac*freshWaterFlux*mass2rUnit
+C     &            * (thetaFreeze - tLoc(I,J))
+C            PRINT *, "Term 2: ", -rFWinBL*freshWaterFlux
+C     &            *mass2rUnit*(tLoc(I,J) - theta(I,J,K,bi,bj))
             shelficeForcingS(i,j,bi,bj) =
      &           ( shiTransCoeffS(i,j,bi,bj)
      &           - cFac*freshWaterFlux*mass2rUnit

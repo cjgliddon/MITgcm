@@ -104,21 +104,19 @@ C-----------------------------------------------------------------------
       COMMON /HPIMM_PARAMS_I/
      &       hpimm_QbotType
       COMMON /HPIMM_PARAMS_R/
-     &	     rho_hpi, Lfus_hpi,
-     &	     gammaT_hpi, gammaS_hpi, 
+     &	 rho_hpi, Lfus_hpi,
+     &	 gammaT_hpi, gammaS_hpi, 
      &       cp_hpi, kappaT_hpi, dTdz_hpi,
-     &	     sfz_EOScoef_w, sfz_EOSnorm_w,
-     &	     sfz_FPcoef_l, sfz_pRef,
-     &	     sfz_rhoCoefs, sfz_etaCoefs
+     &	 sfz_EOScoef_w, sfz_EOSnorm_w,
+     &	 sfz_FPcoef_l, sfz_pRef
       COMMON /HPIMM_PARAMS_C/
      &       hpimm_TbtopFile, hpimm_TbbotFile,
      &       hpimm_Scal1File, hpimm_Scal2File,
      &       hpimm_VelUFile,  hpimm_VelVFile,
      &       hpimm_Surf1File, hpimm_Surf2File,
-     &	     sfz_RhoFile, sfz_EtaFile,
-     &	     hpimm_flooriceType,
-     &	     hpimm_QbotFile
-
+     &	 hpimm_flooriceType,
+     &	 hpimm_QbotFile,
+     &	 sfz_RhoFile, sfzEtaFile
 
 C-----------------------------------------------------------------------
 

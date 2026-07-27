@@ -18,7 +18,7 @@
 #  fileFlags(n)     : specific code (8c string) for output file "n"
 #--------------------
  &DIAGNOSTICS_LIST
- diag_mnc     = .FALSE.,
+ diag_mnc     = .TRUE.,
   fields(1:5,1)  = 'ETAN    ','ETANSQ  ','DETADT2 ','PHIBOT  ','PHIBOTSQ',
 #                   'GM_VisbK',
    levels(1,1) = 1.,

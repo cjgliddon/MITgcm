@@ -27,9 +27,6 @@ C     routine.
       INTEGER myThid
 
 C     !FUNCTIONS
-      _RL SFZ_TEMP
-      EXTERNAL SFZ_TEMP
-
 
 C     !LOCAL VARIABLES:
 C     pLoc      :: local pressure (dummy variable)
@@ -108,8 +105,8 @@ C     varying bottom topography
              print *, "pLoc, sLoc, thetaLoc", pLoc, sLoc, thetaLoc
              print *, "at point:", i, j, kLB, bi, bj
             END IF
-            tLoc = SFZ_TEMP(sLoc, theta(i,j,kLB,bi,bj)+273.15,
-     &                     pLoc*MPa2Pa, sfz_pRef)
+            CALL SFZ_THETA2T(pLoc*MPa2Pa, theta(i,j,kLB,bi,bj)+273.15,
+     &                       sLoc, sfz_pRef, tLoc)
 C           PRINT *, "Theta: ", theta(i,j,kLB,bi,bj) + 273.15
 C           PRINT *, "T_abs: ", tLoc
 C           PRINT *, "Salin: ", sLoc

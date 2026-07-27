@@ -275,6 +275,7 @@ C     set default according to EOS type (as it was until chkpt65t)
         IF ( selectP_inEOS_Zc.EQ.UNSET_I ) THEN
           IF ( eosType .EQ. 'JMD95P' .OR.  eosType .EQ. 'UNESCO'
      &    .OR. eosType .EQ. 'MDJWF'  .OR.  eosType .EQ. 'TEOS10'
+     &    .OR. eosType .EQ. 'SEAFRZ'
      &       ) THEN
            selectP_inEOS_Zc = 2
           ELSE
